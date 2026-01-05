@@ -1,6 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import os
+import h5py
+from cmap import Colormap
+from scipy.interpolate import RegularGridInterpolator
 from posydon.popsyn.synthetic_population import Rates
 from posydon.popsyn.rate_calculation import get_shell_comoving_volume
 from pathlib import Path
@@ -8,26 +11,58 @@ from posydon.config import PATH_TO_POSYDON
 
 plt.style.use(str(Path(PATH_TO_POSYDON) / 'posydon' / 'visualization' / 'posydon.mplstyle'))
 
-mass_bins = np.linspace(10, 200, 51)
-q_bins = np.linspace(0, 1, 51)
-chi_bins = np.linspace(-0.2, 1, 51)
+# load the spline data
+spline_file = '/home/users/b/briel/scratch/high_mass_physics/data/spline_data/ppd_pdfs_mean_m1qzchieff_mmin40_collector_only_10000w_10000s_rng129_zspline.h5'
+file = h5py.File(spline_file, 'r')
+
+m1_bins_pdf = file['mgrid'][:]
+q_bins_pdf = file['qgrid'][:]
+pdf_spline = file['mass_pdf'][:]
+
+spline_interpolator = RegularGridInterpolator(
+    (m1_bins_pdf, q_bins_pdf),
+    pdf_spline.T,
+    method='linear',
+    bounds_error=False,
+    fill_value=0
+)
+
+
+high_res_mchirp_bins = np.linspace(1, 200, 2000)
+high_res_q_bins = np.linspace(0.0001, 1, 2000)
+X,Y  = np.meshgrid(high_res_mchirp_bins, high_res_q_bins, indexing='ij')
+high_res_m1_values = Y**(-3/5) * (1+Y)**(1/5) * X
+points = np.array([high_res_m1_values.ravel(), Y.ravel()]).T
+Z = spline_interpolator(points).reshape(X.shape)* Y**(-3/5) * (1+Y)**(1/5)
+# make into a density
+Z = Z / np.sum(Z)
+pdf_levels = [np.quantile(Z, 0.05),
+              np.quantile(Z, 0.95),
+              np.quantile(Z, 0.99),
+              ]
+
+cm_blues = Colormap('colorbrewer:Blues')
+pdf_colours = cm_blues([0.2, 0.6, 1.0])
+cm_grays = Colormap('colorbrewer:Greys')
 
 # Define the data directory and folder types
 data_dir = '/home/users/b/briel/scratch/high_mass_physics/data/main_figure/'
 folder_types = ['Eddington-limited', 'GRMHD', 'conservative']
+SFH_type = 'IllustrisTNG'
 
 mass_bins = np.linspace(10, 200, 51)
 q_bins = np.linspace(0, 1, 51)
 chi_bins = np.linspace(-0.2, 1, 51)
 
-fig, axes = plt.subplots(2, 3, figsize=(3.38*2, 2.535*2))
+
+fig, axes = plt.subplots(2, 3, figsize=(3.38*2, 2.535*1.7))
 plt.subplots_adjust(wspace=0.05, hspace=0.05)
 
 for i, folder_type in enumerate(folder_types):
     print(f"Processing folder: {folder_type}")
-    folder_path = os.path.join(data_dir, folder_type)
-    co_contact_file = os.path.join(folder_path, 'CO_contact.h5')
-    data = Rates(co_contact_file, 'BBH', 'IllustrisTNG')
+    co_contact_file = os.path.join(data_dir, folder_type+'.h5',)
+    #co_contact_file = os.path.join(folder_path, 'CO_contact.h5')
+    data = Rates(co_contact_file, 'BBH', SFH_type)
     print("Rates data loaded.")
     max_mass = np.maximum(data.population['S1_mass'].values, data.population['S2_mass'].values)
     mask = max_mass > 40
@@ -40,8 +75,6 @@ for i, folder_type in enumerate(folder_types):
     mass_ratio = filtered_population['mass_ratio'].to_numpy()
     chi_eff = filtered_population['chi_eff'].to_numpy()
     
-    
-
     # Top row: chirp mass vs mass ratio
     H0, xedges0, yedges0 = np.histogram2d(chirp_mass,
                                         mass_ratio,
@@ -57,11 +90,23 @@ for i, folder_type in enumerate(folder_types):
     level0_3 = H0_sorted[np.searchsorted(H0_cumsum, 0.997 * H0_total)]
     levels0 = [level0_3, level0_2, level0_1]
 
-    axes[0, i].imshow(H0.T, origin='lower', extent=[xedges0[0], xedges0[-1], yedges0[0], yedges0[-1]],
-                        cmap='gray_r', aspect='auto', interpolation='gaussian')
-    axes[0, i].contour(H0.T, levels=levels0, colors=['grey', 'dimgray', 'black'],
-                    linewidths=[1.0, 1, 1],
-                    extent=[xedges0[0], xedges0[-1], yedges0[0], yedges0[-1]])
+    axes[0, i].imshow(H0.T,
+                      origin='lower',
+                      extent=[xedges0[0], xedges0[-1], yedges0[0], yedges0[-1]],
+                      cmap=cm_grays.to_mpl(),
+                      aspect='auto',
+                      interpolation='bilinear')
+    
+    axes[0, i].contour(H0.T,
+                       levels=levels0,
+                       colors=cm_grays([0.2, 0.6, 1.0]),
+                       linewidths=[1.0, 1.0, 1.0],
+                       extent=[xedges0[0], xedges0[-1], yedges0[0], yedges0[-1]])
+
+    axes[0,i].contour(X, Y, Z,
+                      levels=pdf_levels,
+                      colors=pdf_colours,
+                      linewidths=[1.5, 1.5, 1.5])
 
     # Top bottom row: Chirp mass vs chi_eff
     H1, xedges1, yedges1 = np.histogram2d(chirp_mass,
@@ -78,12 +123,18 @@ for i, folder_type in enumerate(folder_types):
     level1_3 = H1_sorted[np.searchsorted(H1_cumsum, 0.997 * H1_total)]
     levels1 = [level1_3, level1_2, level1_1]
 
-    axes[1, i].imshow(H1.T, origin='lower', extent=[xedges1[0], xedges1[-1], yedges1[0], yedges1[-1]], 
-                        cmap='gray_r', aspect='auto', interpolation='gaussian')
+    axes[1, i].imshow(H1.T,
+                      origin='lower',
+                      extent=[xedges1[0], xedges1[-1], yedges1[0], yedges1[-1]], 
+                      cmap=cm_grays.to_mpl(), 
+                      aspect='auto',
+                      interpolation='bilinear')
 
-    axes[1, i].contour(H1.T, levels=levels1, colors=['grey', 'dimgray', 'black'],
-                    linewidths=[1.0, 1, 1],
-                    extent=[xedges1[0], xedges1[-1], yedges1[0], yedges1[-1]])
+    axes[1, i].contour(H1.T,
+                       levels=levels1,
+                       colors=cm_grays([0.2, 0.6, 1.0]),
+                       linewidths=[1.0, 1.0, 1.0],
+                       extent=[xedges1[0], xedges1[-1], yedges1[0], yedges1[-1]])
 
     # add rate denisty
     rate_density = np.nansum(weights)/volume
@@ -114,4 +165,4 @@ for ax in axes.flatten():
     ax.grid(ls='--', alpha=0.5)
     
 output_dir = '/home/users/b/briel/scratch/high_mass_physics/figures'
-plt.savefig(f'{output_dir}/intrinsic_main_figure.png', bbox_inches='tight')
+plt.savefig(f'{output_dir}/intrinsic_main_figure_{SFH_type}.png', bbox_inches='tight')
