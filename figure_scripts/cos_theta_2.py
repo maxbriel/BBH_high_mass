@@ -45,11 +45,13 @@ for i, folder_type in enumerate(folder_types[:-2]):
     filtered_population = data.population[mask]
     chirp_mass = filtered_population['chirp_mass'].to_numpy()
     mass_ratio = filtered_population['mass_ratio'].to_numpy()
-    chi_eff = np.where(filtered_population['S1_mass'] < filtered_population['S2_mass'], filtered_population['S1_spin'].to_numpy(), filtered_population['S2_spin'].to_numpy())
+    S2_tilt = np.where(filtered_population['S1_mass'] < filtered_population['S2_mass'],
+                       filtered_population['S1_spin_orbit_tilt'].to_numpy(),
+                       filtered_population['S2_spin_orbit_tilt'].to_numpy())
     print(filtered_population['metallicity'].value_counts())
     # plot KDE
-    kde = gaussian_kde(chi_eff, weights=np.nansum(weights, axis=1)/volume)
-    x_eval = np.linspace(0, 1.0, 500)
+    kde = gaussian_kde(np.cos(S2_tilt), weights=np.nansum(weights, axis=1)/volume)
+    x_eval = np.linspace(-1.0, 1.0, 500)
     kde_values = kde(x_eval)
     if folder_type in tuple(title_mapping.keys()):
         label = title_mapping[folder_type]
@@ -79,13 +81,13 @@ for i, folder_type in enumerate(folder_types):
     filtered_population = data.population[mask]
     chirp_mass = filtered_population['chirp_mass'].to_numpy()
     mass_ratio = filtered_population['mass_ratio'].to_numpy()
-    chi_eff = np.where(filtered_population['S1_mass'] < filtered_population['S2_mass'],
-                       filtered_population['S1_spin'].to_numpy(),
-                       filtered_population['S2_spin'].to_numpy())
+    S2_tilt = np.where(filtered_population['S1_mass'] < filtered_population['S2_mass'],
+                       filtered_population['S1_spin_orbit_tilt'].to_numpy(),
+                       filtered_population['S2_spin_orbit_tilt'].to_numpy())
     print(filtered_population['metallicity'].value_counts())
     # plot KDE
-    kde = gaussian_kde(chi_eff, weights=np.nansum(weights, axis=1)/volume)
-    x_eval = np.linspace(0, 1.0, 500)
+    kde = gaussian_kde(np.cos(S2_tilt), weights=np.nansum(weights, axis=1)/volume)
+    x_eval = np.linspace(-1.0, 1.0, 500)
     kde_values = kde(x_eval)
     if folder_type in tuple(title_mapping.keys()):
         label = title_mapping[folder_type]
@@ -112,11 +114,13 @@ for i, folder_type in enumerate(folder_types):
     filtered_population = data.population[mask]
     chirp_mass = filtered_population['chirp_mass'].to_numpy()
     mass_ratio = filtered_population['mass_ratio'].to_numpy()
-    chi_eff = np.where(filtered_population['S1_mass'] < filtered_population['S2_mass'], filtered_population['S1_spin'].to_numpy(), filtered_population['S2_spin'].to_numpy())
+    S2_tilt = np.where(filtered_population['S1_mass'] < filtered_population['S2_mass'],
+                       filtered_population['S1_spin_orbit_tilt'].to_numpy(),
+                       filtered_population['S2_spin_orbit_tilt'].to_numpy())
     print(filtered_population['metallicity'].value_counts())
     # plot KDE
-    kde = gaussian_kde(chi_eff, weights=np.nansum(weights, axis=1)/volume)
-    x_eval = np.linspace(0, 1.0, 500)
+    kde = gaussian_kde(np.cos(S2_tilt), weights=np.nansum(weights, axis=1)/volume)
+    x_eval = np.linspace(-1.0, 1.0, 500)
     kde_values = kde(x_eval)
     if folder_type in tuple(title_mapping.keys()):
         label = title_mapping[folder_type]
@@ -127,11 +131,11 @@ for i, folder_type in enumerate(folder_types):
     
 
 plt.ylim(0, 10)
-plt.xlim(0, 1.0)
-plt.xlabel(r'$\chi_{\mathrm{2}}$')
+plt.xlim(-1.0, 1.0)
+plt.xlabel(r'$\cos(\theta_1)$')
 plt.ylabel('PDF')
 plt.legend(ncol=2)
 
 output_dir = '/home/users/b/briel/scratch/high_mass_physics/figures'
-plt.savefig(f'{output_dir}/intrinsic_chi_2.png',dpi=300, bbox_inches='tight')
-plt.savefig(f'{output_dir}/intrinsic_chi_2.pdf', bbox_inches='tight')
+plt.savefig(f'{output_dir}/intrinsic_cos_theta_1.png',dpi=300, bbox_inches='tight')
+plt.savefig(f'{output_dir}/intrinsic_cos_theta_1.pdf', bbox_inches='tight')

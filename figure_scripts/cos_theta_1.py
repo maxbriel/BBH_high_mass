@@ -28,7 +28,7 @@ cm = Colormap('tol:vibrant')
 
 colours = cm([0.1, 0.2, 0.3, 0.5, 0.6, 0.8])
 
-chi_eff_bins = np.linspace(0, 1, 51)
+cos_theta_bins = np.linspace(-1, 1, 51)
 
 for i, folder_type in enumerate(folder_types[:-2]):
     print(f"Processing folder: {folder_type}")
@@ -45,18 +45,26 @@ for i, folder_type in enumerate(folder_types[:-2]):
     filtered_population = data.population[mask]
     chirp_mass = filtered_population['chirp_mass'].to_numpy()
     mass_ratio = filtered_population['mass_ratio'].to_numpy()
-    chi_eff = np.where(filtered_population['S1_mass'] < filtered_population['S2_mass'], filtered_population['S1_spin'].to_numpy(), filtered_population['S2_spin'].to_numpy())
+    S1_tilt = np.where(filtered_population['S1_mass'] >= filtered_population['S2_mass'],
+                       filtered_population['S1_spin_orbit_tilt'].to_numpy(),
+                       filtered_population['S2_spin_orbit_tilt'].to_numpy())
     print(filtered_population['metallicity'].value_counts())
     # plot KDE
-    kde = gaussian_kde(chi_eff, weights=np.nansum(weights, axis=1)/volume)
-    x_eval = np.linspace(0, 1.0, 500)
-    kde_values = kde(x_eval)
+    h, _ = np.histogram(np.cos(S1_tilt),
+                        bins=cos_theta_bins,
+                        weights=np.nansum(weights, axis=1)/volume,
+                        density=True)
+    
     if folder_type in tuple(title_mapping.keys()):
         label = title_mapping[folder_type]
     else:
         label = folder_type
     
-    plt.plot(x_eval, kde_values, lw=1, label='Eddington', color=colours[i])
+    plt.step(cos_theta_bins[:-1],
+             h,
+             lw=1,
+             label='Eddington',
+             color=colours[i])
     
 
 data_dir = '/home/users/b/briel/scratch/high_mass_physics/data/figure_2/'
@@ -79,20 +87,27 @@ for i, folder_type in enumerate(folder_types):
     filtered_population = data.population[mask]
     chirp_mass = filtered_population['chirp_mass'].to_numpy()
     mass_ratio = filtered_population['mass_ratio'].to_numpy()
-    chi_eff = np.where(filtered_population['S1_mass'] < filtered_population['S2_mass'],
-                       filtered_population['S1_spin'].to_numpy(),
-                       filtered_population['S2_spin'].to_numpy())
+    S1_tilt = np.where(filtered_population['S1_mass'] >= filtered_population['S2_mass'],
+                       filtered_population['S1_spin_orbit_tilt'].to_numpy(),
+                       filtered_population['S2_spin_orbit_tilt'].to_numpy())
     print(filtered_population['metallicity'].value_counts())
     # plot KDE
-    kde = gaussian_kde(chi_eff, weights=np.nansum(weights, axis=1)/volume)
-    x_eval = np.linspace(0, 1.0, 500)
-    kde_values = kde(x_eval)
+    h, _ = np.histogram(np.cos(S1_tilt),
+                        bins=cos_theta_bins,
+                        weights=np.nansum(weights, axis=1)/volume,
+                        density=True)
+
     if folder_type in tuple(title_mapping.keys()):
         label = title_mapping[folder_type]
     else:
         label = folder_type
-    
-    plt.plot(x_eval, kde_values, lw=1, label="Cons."+label, color=colours[5], ls=linestyles[i])
+        
+    plt.step(cos_theta_bins[:-1],
+             h,
+             lw=1,
+             label="Cons."+label,
+             color=colours[5],
+             ls=linestyles[i])
     
 data_dir = '/home/users/b/briel/scratch/high_mass_physics/data/kick_figure_GRMHD/'
 folder_types = ['no_kick', 'low_kick', 'normal_kick']
@@ -112,26 +127,35 @@ for i, folder_type in enumerate(folder_types):
     filtered_population = data.population[mask]
     chirp_mass = filtered_population['chirp_mass'].to_numpy()
     mass_ratio = filtered_population['mass_ratio'].to_numpy()
-    chi_eff = np.where(filtered_population['S1_mass'] < filtered_population['S2_mass'], filtered_population['S1_spin'].to_numpy(), filtered_population['S2_spin'].to_numpy())
+    S1_tilt = np.where(filtered_population['S1_mass'] >= filtered_population['S2_mass'],
+                       filtered_population['S1_spin_orbit_tilt'].to_numpy(),
+                       filtered_population['S2_spin_orbit_tilt'].to_numpy())
     print(filtered_population['metallicity'].value_counts())
     # plot KDE
-    kde = gaussian_kde(chi_eff, weights=np.nansum(weights, axis=1)/volume)
-    x_eval = np.linspace(0, 1.0, 500)
-    kde_values = kde(x_eval)
+    h, _ = np.histogram(np.cos(S1_tilt),
+                        bins=cos_theta_bins,
+                        weights=np.nansum(weights, axis=1)/volume,
+                        density=True)
+    
     if folder_type in tuple(title_mapping.keys()):
         label = title_mapping[folder_type]
     else:
         label = folder_type
     
-    plt.plot(x_eval, kde_values, lw=1, label='GRMHD'+label, color=colours[3],ls=linestyles[i])
+    plt.step(cos_theta_bins[:-1],
+             h,
+             lw=1,
+             label='GRMHD'+label,
+             color=colours[3],
+             ls=linestyles[i])
     
 
 plt.ylim(0, 10)
-plt.xlim(0, 1.0)
-plt.xlabel(r'$\chi_{\mathrm{2}}$')
+plt.xlim(-1.0, 1.0)
+plt.xlabel(r'$\cos(\theta_1)$')
 plt.ylabel('PDF')
 plt.legend(ncol=2)
 
 output_dir = '/home/users/b/briel/scratch/high_mass_physics/figures'
-plt.savefig(f'{output_dir}/intrinsic_chi_2.png',dpi=300, bbox_inches='tight')
-plt.savefig(f'{output_dir}/intrinsic_chi_2.pdf', bbox_inches='tight')
+plt.savefig(f'{output_dir}/intrinsic_cos_theta_1.png',dpi=300, bbox_inches='tight')
+plt.savefig(f'{output_dir}/intrinsic_cos_theta_1.pdf', bbox_inches='tight')
