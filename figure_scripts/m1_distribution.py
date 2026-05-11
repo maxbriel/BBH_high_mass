@@ -1,5 +1,6 @@
 import h5py
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 import os
 from pathlib import Path
@@ -12,29 +13,32 @@ from posydon.popsyn.rate_calculation import get_shell_comoving_volume
 
 plt.style.use(str(Path(PATH_TO_POSYDON) / 'posydon' / 'visualization' / 'posydon.mplstyle'))
 
-# load spline
-spline_file = '/home/users/b/briel/scratch/high_mass_physics/data/spline_data/ppd_pdfs_mean_m1qzchieff_mmin40_collector_only_10000w_10000s_rng129_zspline.h5'
+# load BGP data from Anarya (send on slack)
+data_file = "/home/users/b/briel/scratch/high_mass_physics/data/hm_dists.h5"
 
-file = h5py.File(spline_file, 'r')
 
-mass_pdf = file['mass_pdf'][:]
-mass_grid = file['mgrid'][:]
+with h5py.File(data_file, "r") as hf:
+    m1bins = hf['1D']['mass1'][:]
+    pdf_m1 = hf['1D']['p_mass1'][:]
 
-# Calculate statistics across iterations
-mean_pdf = np.mean(mass_pdf, axis=0)
-std_pdf = np.std(mass_pdf, axis=0)
-# Use 95% confidence interval (2.5th to 97.5th percentile)
-percentile_2_5 = np.percentile(mass_pdf, 2.5, axis=0)
-percentile_97_5 = np.percentile(mass_pdf, 97.5, axis=0)
+Rp_m1=np.array(pdf_m1)
+Rpm_5 = np.percentile(Rp_m1,q=5,axis=0)
+Rpm_95 = np.percentile(Rp_m1,q=95,axis=0)
+R_pm_med = np.percentile(Rp_m1,q=50,axis=0)
 
-# Plot mean with filled uncertainty region
+
+# define colourmaps
+cm = Colormap('tol:vibrant')
+colours = cm([0.1, 0.2, 0.3, 0.5, 0.6, 0.8])
+
+# define bins
+mass_bins = np.linspace(40, 200, 71)
+
+# setup figure
 fig, ax = plt.subplots(1,1, figsize=(3.38, 2.535))
 
-plt.plot(mass_grid, mean_pdf, color='black', linewidth=2, label='Spline')
-plt.fill_between(mass_grid, percentile_2_5, percentile_97_5, 
-                 color='black',
-                 alpha=0.2,
-                 edgecolor='none')
+# plot BGP distribution
+ax.fill_between(m1bins,Rpm_5,Rpm_95,alpha=0.3,color="gray", label = "BGP")
 
 
 # Define the data directory and folder types
@@ -42,132 +46,58 @@ data_dir = '/home/users/b/briel/scratch/high_mass_physics/data/main_figure/'
 folder_types = ['Eddington-limited', 'GRMHD', 'conservative']
 SFH_type = 'IllustrisTNG'
 
-
 title_mapping = {
     'no_kick': '',
     'low_kick': '-Low',
     'normal_kick': '-Normal',
 }
 
-mass_bins = np.linspace(40, 150, 101)
-
-cm = Colormap('tol:vibrant')
-
-colours = cm([0.1, 0.2, 0.3, 0.5, 0.6, 0.8])
-
-for i, folder_type in enumerate(folder_types[:-2]):
-    print(f"Processing folder: {folder_type}")
-    co_contact_file = os.path.join(data_dir, folder_type+'.h5',)
-    #co_contact_file = os.path.join(folder_path, 'CO_contact.h5')
-    data = Rates(co_contact_file, 'BBH', SFH_type)
-    print("Rates data loaded.")
-    max_mass = np.maximum(data.population['S1_mass'].values, data.population['S2_mass'].values)
-    mask = max_mass > 40
-    z_max = 2
-    z_event_mask = data.z_events <= z_max
-    volume = get_shell_comoving_volume(0, z_max)
-    weights = data.weights[z_event_mask][mask]
-    filtered_population = data.population[mask]
-    S1_mass = np.where(filtered_population['S1_mass'].to_numpy() >= filtered_population['S2_mass'].to_numpy(),
-                       filtered_population['S1_mass'].to_numpy(),
-                       filtered_population['S2_mass'].to_numpy())
-    
-    print(filtered_population['metallicity'].value_counts())
-    # plot KDE
-    kde = gaussian_kde(S1_mass, weights=np.nansum(weights, axis=1)/volume)
-    x_eval = np.linspace(40, 150, 500)
-    kde_values = kde(x_eval)
-    if folder_type in tuple(title_mapping.keys()):
-        label = title_mapping[folder_type]
-    else:
-        label = folder_type
-    
-    plt.plot(x_eval, kde_values*(np.nansum(weights)/volume), lw=1, label='Eddington', color=colours[i])
-   
- 
-
-data_dir = '/home/users/b/briel/scratch/high_mass_physics/data/figure_2/'
-folder_types = ['no_kick', 'low_kick', 'normal_kick']
-linestyles = ['solid', 'dashed', 'dotted']
-
-SFH_type = 'IllustrisTNG'
 for i, folder_type in enumerate(folder_types):
     print(f"Processing folder: {folder_type}")
-    co_contact_file = os.path.join(data_dir, folder_type+'.h5',)
-    data = Rates(co_contact_file, 'BBH', SFH_type)
-    print("Rates data loaded.")
-    max_mass = np.maximum(data.population['S1_mass'].values, data.population['S2_mass'].values)
-    mask = max_mass > 40
-    z_max = 2
-    z_event_mask = data.z_events <= z_max
-    volume = get_shell_comoving_volume(0, z_max)
-    weights = data.weights[z_event_mask][mask]
-    filtered_population = data.population[mask]
-    
-    S1_mass = np.where(filtered_population['S1_mass'].to_numpy() >= filtered_population['S2_mass'].to_numpy(),
-                       filtered_population['S1_mass'].to_numpy(),
-                       filtered_population['S2_mass'].to_numpy())
-    print(S1_mass)
-    print(filtered_population['metallicity'].value_counts())
-    # plot KDE
-    # h, _ = np.histogram(S1_mass,
-    #                     bins=mass_bins,
-    #                     weights=np.nansum(weights, axis=1)/volume,)
-    
-    kde = gaussian_kde(S1_mass, weights=np.nansum(weights, axis=1)/volume)
-    x_eval = np.linspace(40, 150, 500)
-    kde_values = kde(x_eval)
-    if folder_type in tuple(title_mapping.keys()):
-        label = title_mapping[folder_type]
-    else:
-        label = folder_type
-    # plt.step(mass_bins[:-1],
-    #          h/np.diff(mass_bins),
-    #          lw=1,
-    #          label='Cons.'+label,
-    #          color=colours[5],
-    #          ls=linestyles[i])
-    plt.plot(x_eval, kde_values*(np.nansum(weights)/volume), lw=1, label="Cons."+label, color=colours[5], ls=linestyles[i])
-    
-data_dir = '/home/users/b/briel/scratch/high_mass_physics/data/kick_figure_GRMHD/'
-folder_types = ['no_kick', 'low_kick', 'normal_kick']
-SFH_type = 'IllustrisTNG'
-for i, folder_type in enumerate(folder_types):
-    print(f"Processing folder: {folder_type}")
-    co_contact_file = os.path.join(data_dir, folder_type+'.h5',)
-    #co_contact_file = os.path.join(folder_path, 'CO_contact.h5')
-    data = Rates(co_contact_file, 'BBH', SFH_type)
-    print("Rates data loaded.")
-    max_mass = np.maximum(data.population['S1_mass'].values, data.population['S2_mass'].values)
-    mask = max_mass > 40
-    z_max = 2
-    z_event_mask = data.z_events <= z_max
-    volume = get_shell_comoving_volume(0, z_max)
-    weights = data.weights[z_event_mask][mask]
-    filtered_population = data.population[mask]
-    S1_mass = np.where(filtered_population['S1_mass'].to_numpy() >= filtered_population['S2_mass'].to_numpy(),
-                       filtered_population['S1_mass'].to_numpy(),
-                       filtered_population['S2_mass'].to_numpy())
-    
-    print(filtered_population['metallicity'].value_counts())
-    # plot KDE
-    kde = gaussian_kde(S1_mass, weights=np.nansum(weights, axis=1)/volume)
-    x_eval = np.linspace(40, 150, 500)
-    kde_values = kde(x_eval)
-    if folder_type in tuple(title_mapping.keys()):
-        label = title_mapping[folder_type]
-    else:
-        label = folder_type
-    
-    plt.plot(x_eval, kde_values*(np.nansum(weights)/volume), lw=1, label='GRMHD'+label, color=colours[3],ls=linestyles[i])
-    
 
-#plt.ylim(0, 10)
-plt.xlim(40, 150)
+    co_contact_file = os.path.join(data_dir, folder_type+'.h5',)
+    data = Rates(co_contact_file, 'BBH', SFH_type)
+    print("Rates data loaded.")
+
+    max_mass = np.maximum(data.population['S1_mass'].values, data.population['S2_mass'].values)
+    mask = max_mass > 40
+    z_max = 2
+    z_event_mask = data.z_events <= z_max
+    volume = get_shell_comoving_volume(0, z_max)
+    weights = data.weights[z_event_mask][mask]
+    filtered_population = data.population[mask]
+    S1_mass = np.where(
+        (filtered_population['S1_mass'].to_numpy() 
+            >= filtered_population['S2_mass'].to_numpy()),
+                       filtered_population['S1_mass'].to_numpy(),
+                       filtered_population['S2_mass'].to_numpy())
+    
+    print(filtered_population['metallicity'].value_counts())
+    
+    # get histogram
+    h, _ = np.histogram(S1_mass,
+                    bins=mass_bins,
+                    weights=np.nansum(weights, axis=1)/volume,)
+    
+    # set label
+    if folder_type in tuple(title_mapping.keys()):
+        label = title_mapping[folder_type]
+    else:
+        label = folder_type
+    
+    plt.step(mass_bins[:-1],
+             h/np.diff(mass_bins),
+             lw=2,
+             label=label,
+             color=colours[i])   
+
+ax.set_yscale('log')
+plt.xlim(44.2, 190)
+ax.set_ylim(1e-4, 1)
 plt.xlabel(r'$M_1 \, (M_{\odot})$')
 plt.ylabel('Rate density $(\mathrm{Gpc}^{-3}\,\mathrm{yr}^{-1}\,M_{\odot}^{-1})$')
 plt.legend(ncol=2)
 
 output_dir = '/home/users/b/briel/scratch/high_mass_physics/figures'
-plt.savefig(f'{output_dir}/intrinsic_m1_distribution.png', dpi=300, bbox_inches='tight')
-plt.savefig(f'{output_dir}/intrinsic_m1_distribution.pdf', bbox_inches='tight')
+plt.savefig('intrinsic_m1_distribution.png', dpi=300, bbox_inches='tight')
+#plt.savefig(f'{output_dir}/intrinsic_m1_distribution.pdf', bbox_inches='tight')
