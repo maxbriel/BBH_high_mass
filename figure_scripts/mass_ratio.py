@@ -18,13 +18,15 @@ plt.style.use(str(Path(PATH_TO_POSYDON) / 'posydon' / 'visualization' / 'posydon
 data_file = "../data/hm_dists.h5"
 
 with h5py.File(data_file, "r") as hf:
-    m1bins = hf['1D']['mass1'][:]
-    pdf_m1 = hf['1D']['p_mass1'][:]
+    mass_ratio_bins_model = hf['1D']['mass_ratio'][:]
+    pdf_mass_ratio = hf['1D']['p_mass_ratio'][:]
+    
 
-Rp_m1=np.array(pdf_m1)
-Rpm_5 = np.percentile(Rp_m1,q=5,axis=0)
-Rpm_95 = np.percentile(Rp_m1,q=95,axis=0)
-R_pm_med = np.percentile(Rp_m1,q=50,axis=0)
+
+Rp_mass_ratio = np.array(pdf_mass_ratio) /np.trapz(np.array(pdf_mass_ratio),mass_ratio_bins_model,axis=1)[:,None]
+Rpm_5 = np.percentile(Rp_mass_ratio,q=5,axis=0)
+Rpm_95 = np.percentile(Rp_mass_ratio,q=95,axis=0)
+R_pm_med = np.percentile(Rp_mass_ratio,q=50,axis=0)
 
 
 # define colourmaps
@@ -32,14 +34,14 @@ cm = Colormap('tol:vibrant')
 colours = cm([0.1,  0.5, 0.8])
 
 # define bins
-mass_bins = np.logspace(np.log10(40), np.log10(210), 51)
+mass_ratio_bins = np.linspace(0, 1.1, 39)
 
 # setup figure
 fig, axes = plt.subplots(1,3, figsize=(3.38*2, 2.535*0.8))
 
 # plot BGP distribution
 for ax in axes:
-    ax.fill_between(m1bins,Rpm_5,Rpm_95,alpha=0.3,color="gray", label = "BGP")
+    ax.fill_between(mass_ratio_bins_model,Rpm_5,Rpm_95,alpha=0.3,color="gray", label = "BGP")
 
 
 # Define the data directory and folder types
@@ -55,25 +57,20 @@ def get_histogram_data(co_contact_file):
     print("Rates data loaded.")
 
     max_mass = np.maximum(data.population['S1_mass'].values, data.population['S2_mass'].values)
-    mask = max_mass > 40
+    mask = max_mass > 44.2
     z_max = 2
     z_event_mask = data.z_events <= z_max
     volume = get_shell_comoving_volume(0, z_max)
     weights = data.weights[z_event_mask][mask]
     filtered_population = data.population[mask]
-    S1_mass = np.where(
-        (filtered_population['S1_mass'].to_numpy() 
-            >= filtered_population['S2_mass'].to_numpy()),
-                       filtered_population['S1_mass'].to_numpy(),
-                       filtered_population['S2_mass'].to_numpy())
-    
-    print('max:', np.max(S1_mass[S1_mass < 110]))
+    mass_ratio = filtered_population['mass_ratio'].to_numpy()
+
     # get histogram
-    h, _ = np.histogram(S1_mass,
-                    bins=mass_bins,
+    h, _ = np.histogram(mass_ratio,
+                    bins=mass_ratio_bins,
                     weights=np.nansum(weights, axis=1)/volume,)
 
-    return h/np.diff(mass_bins)
+    return h/np.diff(mass_ratio_bins)
 
 # no kick population
 for i, folder_type in enumerate(folder_types):
@@ -86,19 +83,19 @@ for i, folder_type in enumerate(folder_types):
     if folder_type == 'conservative':
         label = 'Conservative'
 
-    ax.step(mass_bins[:-1],
-             h,
+    ax.step(mass_ratio_bins[:-1],
+             h / np.sum(h * np.diff(mass_ratio_bins)),
              lw=2,
              label=label,
              color=colours[i],
-             where='post')
+             where='post')  
 
 
 # low kicked populations
 co_contact_file = '../data/' + 'kicks_Eddington-limited/low_kick.h5'
-h = get_histogram_data(co_contact_file )
-axes[1].step(mass_bins[:-1],
-             h,
+h = get_histogram_data(co_contact_file)
+axes[1].step(mass_ratio_bins[:-1],
+             h/np.sum(h * np.diff(mass_ratio_bins)),
              lw=2,
              label='Eddington-limited',
              color=colours[0],
@@ -106,8 +103,8 @@ axes[1].step(mass_bins[:-1],
 
 co_contact_file = '../data/' + 'kick_figure_GRMHD/low_kick.h5'
 h = get_histogram_data(co_contact_file)
-axes[1].step(mass_bins[:-1],
-             h,
+axes[1].step(mass_ratio_bins[:-1],
+             h/np.sum(h * np.diff(mass_ratio_bins)),
              lw=2,
              label='GRMHD',
              color=colours[1],
@@ -115,21 +112,20 @@ axes[1].step(mass_bins[:-1],
 
 co_contact_file = '../data/' + 'kicks_conservative/low_kick.h5'
 h = get_histogram_data(co_contact_file)
-axes[1].step(mass_bins[:-1],
-             h,
+axes[1].step(mass_ratio_bins[:-1],
+             h/np.sum(h * np.diff(mass_ratio_bins)),
              lw=2,
              label='Conservative',
              color=colours[2],
              where='post')
-
 axes[1].set_title('Low kick')
 
 # normal kick population
 
 co_contact_file = '../data/' + 'kicks_Eddington-limited/normal_kick.h5'
 h = get_histogram_data(co_contact_file)
-axes[2].step(mass_bins[:-1],
-             h,
+axes[2].step(mass_ratio_bins[:-1],
+             h/np.sum(h * np.diff(mass_ratio_bins)),
              lw=2,
              label='Eddington-limited',
              color=colours[0],
@@ -137,8 +133,8 @@ axes[2].step(mass_bins[:-1],
 
 co_contact_file = '../data/' + 'kick_figure_GRMHD/normal_kick.h5'
 h = get_histogram_data(co_contact_file)
-axes[2].step(mass_bins[:-1],
-             h,
+axes[2].step(mass_ratio_bins[:-1],
+             h/np.sum(h * np.diff(mass_ratio_bins)),
              lw=2,
              label='GRMHD',
              color=colours[1],
@@ -146,8 +142,8 @@ axes[2].step(mass_bins[:-1],
 
 co_contact_file = '../data/' + 'kicks_conservative/normal_kick.h5'
 h = get_histogram_data(co_contact_file)
-axes[2].step(mass_bins[:-1],
-             h,
+axes[2].step(mass_ratio_bins[:-1],
+             h/np.sum(h * np.diff(mass_ratio_bins)),
              lw=2,
              label='Conservative',
              color=colours[2],
@@ -159,21 +155,14 @@ ax.set_title('No kick')
 
 for ax in axes:
     ax.set_yscale('log')
-    ax.set_xscale('log')
-    ax.set_xticks([50, 60, 80,  100, 150, 200])
-    ax.set_xticklabels([50, 60,  80,  100, 150, 200])
-    ax.set_xticks([70, 90, 110, 120, 130, 140, 160, 170, 180, 190], minor=True)
-    ax.set_xticklabels([], minor=True)
-
-    ax.set_xlim(44.2, 200)
-    ax.set_ylim(1e-4, 2)
-    ax.set_xlabel(r'$M_1 \, [M_{\odot}]$')
-
+    ax.set_xlim(0.0001, 0.999)
+    ax.set_ylim(1e-2, 10)
+    ax.set_xlabel(r'$q = M_2/M_1$')
 
 axes[1].set_yticks([])
 axes[2].set_yticks([])
 
-axes[0].set_ylabel('$d\mathcal{R}/dM_1$ $[\mathrm{Gpc}^{-3}\,\mathrm{yr}^{-1}\,M_{\odot}^{-1}]$')
+axes[0].set_ylabel('PDF')
 
 
 axes[0].legend(bbox_to_anchor=(0.1, -0.25), loc='upper left', ncol=4)
@@ -181,5 +170,5 @@ axes[0].legend(bbox_to_anchor=(0.1, -0.25), loc='upper left', ncol=4)
 plt.subplots_adjust(wspace=0.05, hspace=0.05)
 
 output_dir = "../figures"
-plt.savefig(f'{output_dir}/png/intrinsic_m1_distribution.png', dpi=300, bbox_inches='tight')
-plt.savefig(f'{output_dir}/pdf/intrinsic_m1_distribution.pdf', bbox_inches='tight')
+plt.savefig(f'{output_dir}/png/intrinsic_mass_ratio_distribution.png', dpi=300, bbox_inches='tight')
+plt.savefig(f'{output_dir}/pdf/intrinsic_mass_ratio_distribution.pdf', bbox_inches='tight')

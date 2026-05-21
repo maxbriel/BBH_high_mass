@@ -61,6 +61,34 @@ colours = cm([0.1, 0.2, 0.3, 0.5, 0.6, 0.8])
 
 chi_p_bins = np.linspace(-0.6, 1, 51)
 
+
+def get_histogram_data(co_contact_file):
+    
+    data = Rates(co_contact_file, 'BBH', SFH_type)
+    print("Rates data loaded.")
+
+    max_mass = np.maximum(data.population['S1_mass'].values, data.population['S2_mass'].values)
+    mask = max_mass > 44.2
+    z_max = 2
+    z_event_mask = data.z_events <= z_max
+    volume = get_shell_comoving_volume(0, z_max)
+    weights = data.weights[z_event_mask][mask]
+    filtered_population = data.population[mask]
+    chi_p = precession(filtered_population['S1_spin_orbit_tilt'].to_numpy(),
+                        filtered_population['S2_spin_orbit_tilt'].to_numpy(),
+                        filtered_population['S1_spin'].to_numpy(),
+                        filtered_population['S2_spin'].to_numpy(),
+                        filtered_population['S1_mass'].to_numpy(),
+                        filtered_population['S2_mass'].to_numpy())
+
+    # get histogram
+    h, _ = np.histogram(chi_p,
+                    bins=chi_p_bins,
+                    weights=np.nansum(weights, axis=1)/volume,)
+
+    return h/np.diff(chi_p_bins)
+
+
 for i, folder_type in enumerate(folder_types[:-2]):
     print(f"Processing folder: {folder_type}")
     co_contact_file = os.path.join(data_dir, folder_type+'.h5',)

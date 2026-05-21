@@ -86,13 +86,6 @@ for i, folder_type in enumerate(folder_types):
     level0_3 = H0_sorted[np.searchsorted(H0_cumsum, 0.997 * H0_total)]
     levels0 = [level0_3, level0_2, level0_1]
 
-    #axes[0, i].imshow(H0.T,
-                    #   origin='lower',
-                    #   extent=[xedges0[0], xedges0[-1], yedges0[0], yedges0[-1]],
-                    #   cmap=cm_grays.to_mpl(),
-                    #   aspect='auto',
-                    #   interpolation='bilinear')
-    
     # Use bin edges directly with the histogram data
     # mbins and qbins are already the edges from histogram2d
     axes[0, i].contour(mass_bins[1:], q_bins[1:], H0.T,
