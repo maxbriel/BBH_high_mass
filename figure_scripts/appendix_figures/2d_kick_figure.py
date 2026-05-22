@@ -21,8 +21,9 @@ from posydon.config import PATH_TO_POSYDON
 
 plt.style.use(str(Path(PATH_TO_POSYDON) / 'posydon' / 'visualization' / 'posydon.mplstyle'))
 
+
 # Load BGP data from Anarya (send on slack)
-data_file = "../data/hm_dists.h5"
+data_file = "../../data/hm_dists.h5"
 
 with h5py.File(data_file, "r") as hf:
     matrix1 = hf["2D"]["p_m1q"][()]
@@ -38,16 +39,19 @@ cm = Colormap('tol:YlOrBr')
 cm_grays = Colormap('colorbrewer:Greys')
 
 
-data_dir = '../data/kick_figure_GRMHD/'
+# Define the data directory and folder types
+data_dir = '../../data/no_H_conserved/GRMHD/'
 folder_types = ['no_kick', 'low_kick', 'normal_kick']
 SFH_type = 'IllustrisTNG'
 
+# define bins for histograms/contours
 mass_bins = np.linspace(10, 200, 31)
 q_bins = np.linspace(0, 1, 31)
 chi_bins = np.linspace(-1, 1, 51)
 
 fig, axes = plt.subplots(2, 3, figsize=(3.38*2, 2.535*1.7))
 plt.subplots_adjust(wspace=0.05, hspace=0.05)
+
 
 def get_histogram_data(co_contact_file):
     
@@ -69,10 +73,10 @@ def get_histogram_data(co_contact_file):
 
 
 for i, folder_type in enumerate(folder_types):
-    print(f"Processing folder: {folder_type}")
     
-    M1_mass, mass_ratio, chi_eff, weights, volume = get_histogram_data(os.path.join(data_dir, folder_type+'.h5'))
-    
+    co_contact_file = os.path.join(data_dir, folder_type+'.h5',)
+    M1_mass, mass_ratio, chi_eff, weights, volume = get_histogram_data(co_contact_file)
+
     # Top row: chirp mass vs mass ratio
     H0, xedges0, yedges0 = np.histogram2d(M1_mass,
                                         mass_ratio,
@@ -89,13 +93,12 @@ for i, folder_type in enumerate(folder_types):
     levels0 = [level0_3, level0_2, level0_1]
 
     axes[0, i].contour(mass_bins[1:], q_bins[1:], H0.T,
-                       levels=levels0,
-                       colors=cm([0.2, 0.6, 1.0]),
-                       linewidths=[2.0, 2.0, 2.0])
-    
-    axes[0, i].pcolor(mbins, qbins, matrix1.T, norm=LogNorm(vmin=matrix1[matrix1!=0].min(), vmax=matrix1.max()), cmap=cm_grays.to_mpl())
+                        levels=levels0,
+                        colors=cm([0.2, 0.6, 1.0]),
+                        linewidths=[2.0, 2.0, 2.0])
 
-    # Top bottom row: Chirp mass vs chi_eff
+    axes[0, i].pcolor(mbins, qbins, matrix1.T, norm=LogNorm(vmin=matrix1[matrix1!=0].min(), vmax=matrix1.max()), cmap=cm_grays.to_mpl())
+    #Top bottom row: Chirp mass vs chi_eff
     H1, xedges1, yedges1 = np.histogram2d(M1_mass,
                                             chi_eff,
                                             bins=(mass_bins, chi_bins),
@@ -110,33 +113,19 @@ for i, folder_type in enumerate(folder_types):
     level1_3 = H1_sorted[np.searchsorted(H1_cumsum, 0.997 * H1_total)]
     levels1 = [level1_3, level1_2, level1_1]
 
-    axes[1, i].contour(mass_bins[1:],
-                       chi_bins[1:], H1.T,
-                       levels=levels1,
-                       colors=cm([0.2, 0.6, 1.0]),
-                       linewidths=[2.0, 2.0, 2.0])
-    
+    axes[1, i].contour(mass_bins[1:], chi_bins[1:], H1.T,
+                        levels=levels1,
+                        colors=cm([0.2, 0.6, 1.0]),
+                        linewidths=[2.0, 2.0, 2.0])
+
     axes[1, i].pcolor(mbins,
-                    chibins,
-                    matrix_m1chi.T,
-                    norm=LogNorm(vmin=matrix_m1chi[matrix_m1chi!=0].min(),vmax=matrix_m1chi[matrix_m1chi!=0].max()),cmap=cm_grays.to_mpl())
+                        chibins,
+                        matrix_m1chi.T,
+                        norm=LogNorm(vmin=matrix_m1chi[matrix_m1chi!=0].min(),vmax=matrix_m1chi[matrix_m1chi!=0].max()),cmap=cm_grays.to_mpl())
 
-    # add rate denisty
-    rate_density = np.nansum(weights)/volume
-    axes[1, i].text(0.95,
-                    0.15,
-                    r'$\mathcal{{R}}_{0{-}2}=$'+f'{rate_density:.1f}'+r'$\,\mathrm{{Gpc}}^{{-3}}\,\mathrm{{yr}}^{{-1}}$',
-                    transform=axes[1, i].transAxes,
-                    ha='right',
-                    va='top', 
-                    bbox=dict(boxstyle='round,pad=0.2',
-                              fc='white',
-                              alpha=0.6,
-                              edgecolor='grey',
-                              lw=0.5,
-                              )
-                    )
+    axes[0, i].set_title(folder_type)
 
+    
 # axes and stuff
 axes[0,0].set_ylabel(r'$q=M_\mathrm{min}/M_\mathrm{max}$')
 axes[1,0].set_ylabel(r'$\chi_\mathrm{eff}$')
@@ -178,6 +167,6 @@ for ax in axes[:, 2]:
     ax.yaxis.tick_right()
     ax.yaxis.set_label_position('right')
     
-output_dir = '../figures'
-plt.savefig(f'{output_dir}/png/intrinsic_kick_GRMHD.png', bbox_inches='tight', dpi=300)
-plt.savefig(f'{output_dir}/pdf/intrinsic_kick_GRMHD.pdf', bbox_inches='tight')
+output_dir = '../../figures'
+plt.savefig(f'{output_dir}/png/appendix_no_H_accretion_GRMHD_kick.png', bbox_inches='tight', dpi=300)
+plt.savefig(f'{output_dir}/pdf/appendix_no_H_accretion.GRMHD_kick.pdf', bbox_inches='tight')
