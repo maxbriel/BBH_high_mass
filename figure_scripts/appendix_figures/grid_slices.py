@@ -23,9 +23,9 @@ from matplotlib.lines import Line2D
 warnings.filterwarnings('ignore', message='Missing ini parameter:.*')
 
 # Constants
-METALLICITY = 0.1
+METALLICITY = 0.01
 DPI = 300
-DONOR_MASS = 33.8767  # Fixed donor mass in solar masses
+DONOR_MASS = 33.8767 #59.4328  # Fixed donor mass in solar masses
 HUBBLE_TIME = 13.8e9  # years
 MARKER_SIZE = 9
 MASS_TOLERANCE = 2.0  # solar masses
@@ -240,8 +240,8 @@ def create_figure(donor_mass, grid_paths, grid_labels, metallicity, output_folde
     png_folder.mkdir(parents=True, exist_ok=True)
     pdf_folder.mkdir(parents=True, exist_ok=True)
     
-    output_file_png = png_folder / f'COHMS_RLO_accretion_comparison_M{int(donor_mass)}.png'
-    output_file_pdf = pdf_folder / f'COHMS_RLO_accretion_comparison_M{int(donor_mass)}.pdf'
+    output_file_png = png_folder / f'1e-2Zun_COHMS_RLO_accretion_comparison_M{int(donor_mass)}.png'
+    output_file_pdf = pdf_folder / f'1e-2Zun_COHMS_RLO_accretion_comparison_M{int(donor_mass)}.pdf'
         
     # Get handles and labels from the first plot
     handles, labels = axes[0].get_legend_handles_labels()
@@ -264,7 +264,7 @@ print("="*70)
 grid_paths = [Path(grids_path) / grid_type  / 'POSYDON_data' for grid_type in grid_types]
 grid_labels = ['Eddington-limited', 'GRMHD', 'Conservative']
 
-output_folder = Path('/home/users/b/briel/scratch/high_mass_physics/figures')
+output_folder = Path('/home/users/b/briel/scratch/high_mass_physics/figures/')
 
 print(f"\nMetallicity: {METALLICITY}")
 print(f"Donor mass: {DONOR_MASS} M☉")
