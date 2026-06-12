@@ -128,8 +128,8 @@ axes[0, 2].set_title('Conservative')
 
 for ax in axes.flatten():
     ax.set_xscale('log')
-    ax.set_xlim(44, 200)
-    ax.xaxis.set_ticks([50, 60, 80, 100, 150, 200])
+    ax.set_xlim(MASS_CUTOFF, 200)
+    ax.xaxis.set_ticks([40, 50, 60, 80, 100, 150, 200])
     ax.set_xticklabels([])
 
 # Top row: x-axis at top
@@ -137,16 +137,16 @@ for ax in axes[0, :]:
     ax.xaxis.tick_top()
     ax.xaxis.set_label_position('top')
     ax.set_xlabel(r'$\mathrm{M}_{1}$')
-    ax.xaxis.set_ticks([50, 60, 80, 100, 150, 200])
-    ax.set_xticklabels([50, 60, 80, 100, 150, 200])
+    ax.xaxis.set_ticks([40, 50, 60, 80, 100, 150, 200])
+    ax.set_xticklabels(['', 50, 60, 80, 100, 150, 200])
     ax.set_ylim(0.1, 1)
 
 
 # Bottom row: x-axis at bottom
 for ax in axes[1, :]:
     ax.set_xlabel(r'$\mathrm{M}_{1}$')
-    ax.xaxis.set_ticks([50, 60, 80, 100, 150, 200])
-    ax.set_xticklabels([50, 60, 80, 100, 150, 200])
+    ax.xaxis.set_ticks([40, 50, 60, 80, 100, 150, 200])
+    ax.set_xticklabels(['', 50, 60, 80, 100, 150, 200])
 
 axes[0, 0].set_ylabel(r'$q = \mathrm{M}_2/\mathrm{M}_1$')
 axes[1, 0].set_ylabel(r'$\chi_\mathrm{eff}$')
