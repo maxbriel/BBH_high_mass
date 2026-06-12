@@ -33,6 +33,9 @@ with h5py.File(data_file, "r") as hf:
     matrix_m1chi = hf["2D"]["p_m1chi"][()]
     mbins = hf["2D"]["mass1"][()]
     chibins = hf["2D"]["chi_eff"][()]
+    
+matrix1 = np.array(matrix1) * (1+0.2)**2.7
+matrix_m1chi = np.array(matrix_m1chi) * (1+0.2)**2.7
 
 # Define colormaps
 cm = Colormap('tol:YlOrBr')
@@ -42,7 +45,7 @@ data_dir = '../data/kick_figure_GRMHD/'
 folder_types = ['no_kick', 'low_kick', 'normal_kick']
 SFH_type = 'IllustrisTNG'
 
-mass_bins = np.linspace(10, 200, 31)
+mass_bins = np.linspace(MASS_CUTOFF, 200, 31)
 q_bins = np.linspace(0, 1, 31)
 chi_bins = np.linspace(-1, 1, 51)
 
@@ -56,9 +59,12 @@ def get_histogram_data(co_contact_file):
 
     max_mass = np.maximum(data.population['S1_mass'].values, data.population['S2_mass'].values)
     mask = max_mass > MASS_CUTOFF
-    z_max = 2
-    z_event_mask = data.z_events <= z_max
-    volume = get_shell_comoving_volume(0, z_max)
+    
+    z_max = 0.25
+    z_min = 0.15
+    z_event_mask = (data.z_events >= z_min) & (data.z_events <= z_max)
+    volume = get_shell_comoving_volume(z_min, z_max)
+    
     weights = data.weights[z_event_mask][mask]
     filtered_population = data.population[mask]
     M1_mass = max_mass[mask]
@@ -87,8 +93,17 @@ for i, folder_type in enumerate(folder_types):
     level0_2 = H0_sorted[np.searchsorted(H0_cumsum, 0.954 * H0_total)]
     level0_3 = H0_sorted[np.searchsorted(H0_cumsum, 0.997 * H0_total)]
     levels0 = [level0_3, level0_2, level0_1]
-
-    axes[0, i].contour(mass_bins[1:], q_bins[1:], H0.T,
+    
+    x_centers = 0.5 * (xedges0[:-1] + xedges0[1:])
+    y_centers = 0.5 * (yedges0[:-1] + yedges0[1:])
+    H0_padded = np.pad(H0, pad_width=1, mode='constant', constant_values=0)
+    # Extend centers to match the padded array
+    dx = x_centers[1] - x_centers[0]
+    dy = y_centers[1] - y_centers[0]
+    x_centers_padded = np.concatenate([[x_centers[0] - dx], x_centers, [x_centers[-1] + dx]])
+    y_centers_padded = np.concatenate([[y_centers[0] - dy], y_centers, [y_centers[-1] + dy]])
+    
+    axes[0, i].contour(x_centers_padded, y_centers_padded, H0_padded.T,
                        levels=levels0,
                        colors=cm([0.2, 0.6, 1.0]),
                        linewidths=[2.0, 2.0, 2.0])
@@ -109,9 +124,17 @@ for i, folder_type in enumerate(folder_types):
     level1_2 = H1_sorted[np.searchsorted(H1_cumsum, 0.954 * H1_total)]
     level1_3 = H1_sorted[np.searchsorted(H1_cumsum, 0.997 * H1_total)]
     levels1 = [level1_3, level1_2, level1_1]
+    
+    x_centers = 0.5 * (xedges1[:-1] + xedges1[1:])
+    y_centers = 0.5 * (yedges1[:-1] + yedges1[1:])
+    H1_padded = np.pad(H1, pad_width=1, mode='constant', constant_values=0)
+    # Extend centers to match the padded array
+    dx = x_centers[1] - x_centers[0]
+    dy = y_centers[1] - y_centers[0]
+    x_centers_padded = np.concatenate([[x_centers[0] - dx], x_centers, [x_centers[-1] + dx]])
+    y_centers_padded = np.concatenate([[y_centers[0] - dy], y_centers, [y_centers[-1] + dy]])
 
-    axes[1, i].contour(mass_bins[1:],
-                       chi_bins[1:], H1.T,
+    axes[1, i].contour(x_centers_padded, y_centers_padded, H1_padded.T,
                        levels=levels1,
                        colors=cm([0.2, 0.6, 1.0]),
                        linewidths=[2.0, 2.0, 2.0])
@@ -122,20 +145,20 @@ for i, folder_type in enumerate(folder_types):
                     norm=LogNorm(vmin=matrix_m1chi[matrix_m1chi!=0].min(),vmax=matrix_m1chi[matrix_m1chi!=0].max()),cmap=cm_grays.to_mpl())
 
     # add rate density
-    rate_density = np.nansum(weights)/volume
-    axes[1, i].text(0.95,
-                    0.15,
-                    r'$\mathcal{{R}}_{0{-}2}=$'+f'{rate_density:.1f}'+r'$\,\mathrm{{Gpc}}^{{-3}}\,\mathrm{{yr}}^{{-1}}$',
-                    transform=axes[1, i].transAxes,
-                    ha='right',
-                    va='top', 
-                    bbox=dict(boxstyle='round,pad=0.2',
-                              fc='white',
-                              alpha=0.6,
-                              edgecolor='grey',
-                              lw=0.5,
-                              )
-                    )
+    # rate_density = np.nansum(weights)/volume
+    # axes[1, i].text(0.95,
+    #                 0.15,
+    #                 r'$\mathcal{{R}}_{0{-}2}=$'+f'{rate_density:.1f}'+r'$\,\mathrm{{Gpc}}^{{-3}}\,\mathrm{{yr}}^{{-1}}$',
+    #                 transform=axes[1, i].transAxes,
+    #                 ha='right',
+    #                 va='top', 
+    #                 bbox=dict(boxstyle='round,pad=0.2',
+    #                           fc='white',
+    #                           alpha=0.6,
+    #                           edgecolor='grey',
+    #                           lw=0.5,
+    #                           )
+    #                 )
 
 # axes and stuff
 axes[0,0].set_ylabel(r'$q=\mathrm{M}_\mathrm{min}/\mathrm{M}_\mathrm{max}$')
@@ -161,12 +184,12 @@ for ax in axes[0, :]:
     ax.set_xticklabels(['', 50, 60, 80, 100, 150, 200])
     ax.set_ylim(0.1, 1)
 
-
 # Bottom row: x-axis at bottom
 for ax in axes[1, :]:
     ax.set_xlabel(r'$\mathrm{M}_{1}$')
     ax.xaxis.set_ticks([40, 50, 60, 80, 100, 150, 200])
     ax.set_xticklabels(['', 50, 60, 80, 100, 150, 200])
+    ax.set_ylim(-1, 1)
 
 axes[0, 0].set_ylabel(r'$q = \mathrm{M}_2/\mathrm{M}_1$')
 axes[1, 0].set_ylabel(r'$\chi_\mathrm{eff}$')
