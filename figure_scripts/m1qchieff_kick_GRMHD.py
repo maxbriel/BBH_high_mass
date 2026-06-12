@@ -13,7 +13,6 @@ from cmap import Colormap
 
 from scipy.interpolate import RegularGridInterpolator
 
-
 from posydon.popsyn.synthetic_population import Rates
 from posydon.popsyn.rate_calculation import get_shell_comoving_volume
 
@@ -21,8 +20,10 @@ from posydon.config import PATH_TO_POSYDON
 
 plt.style.use(str(Path(PATH_TO_POSYDON) / 'posydon' / 'visualization' / 'posydon.mplstyle'))
 
+MASS_CUTOFF = 39.76734837  # Mass cutoff for the analysis
+
 # Load BGP data from Anarya (send on slack)
-data_file = "../data/hm_dists.h5"
+data_file = "../data/hm_dists_gwtc5_40.h5"
 
 with h5py.File(data_file, "r") as hf:
     matrix1 = hf["2D"]["p_m1q"][()]
@@ -36,7 +37,6 @@ with h5py.File(data_file, "r") as hf:
 # Define colormaps
 cm = Colormap('tol:YlOrBr')
 cm_grays = Colormap('colorbrewer:Greys')
-
 
 data_dir = '../data/kick_figure_GRMHD/'
 folder_types = ['no_kick', 'low_kick', 'normal_kick']
@@ -55,7 +55,7 @@ def get_histogram_data(co_contact_file):
     print("Rates data loaded.")
 
     max_mass = np.maximum(data.population['S1_mass'].values, data.population['S2_mass'].values)
-    mask = max_mass > 44.2
+    mask = max_mass > MASS_CUTOFF
     z_max = 2
     z_event_mask = data.z_events <= z_max
     volume = get_shell_comoving_volume(0, z_max)
@@ -95,7 +95,7 @@ for i, folder_type in enumerate(folder_types):
     
     axes[0, i].pcolor(mbins, qbins, matrix1.T, norm=LogNorm(vmin=matrix1[matrix1!=0].min(), vmax=matrix1.max()), cmap=cm_grays.to_mpl())
 
-    # Top bottom row: Chirp mass vs chi_eff
+    # Top bottom row: primary mass vs chi_eff
     H1, xedges1, yedges1 = np.histogram2d(M1_mass,
                                             chi_eff,
                                             bins=(mass_bins, chi_bins),
@@ -121,7 +121,7 @@ for i, folder_type in enumerate(folder_types):
                     matrix_m1chi.T,
                     norm=LogNorm(vmin=matrix_m1chi[matrix_m1chi!=0].min(),vmax=matrix_m1chi[matrix_m1chi!=0].max()),cmap=cm_grays.to_mpl())
 
-    # add rate denisty
+    # add rate density
     rate_density = np.nansum(weights)/volume
     axes[1, i].text(0.95,
                     0.15,
@@ -138,7 +138,7 @@ for i, folder_type in enumerate(folder_types):
                     )
 
 # axes and stuff
-axes[0,0].set_ylabel(r'$q=M_\mathrm{min}/M_\mathrm{max}$')
+axes[0,0].set_ylabel(r'$q=\mathrm{M}_\mathrm{min}/\mathrm{M}_\mathrm{max}$')
 axes[1,0].set_ylabel(r'$\chi_\mathrm{eff}$')
 
 axes[0,0].set_title('No kick')
@@ -148,27 +148,27 @@ axes[0,2].set_title('Normal kick')
 # axes and stuff
 for ax in axes.flatten():
     ax.set_xscale('log')
-    ax.set_xlim(44, 200)
-    ax.xaxis.set_ticks([50, 60, 80, 100, 150, 200])
+    ax.set_xlim(MASS_CUTOFF, 200)
+    ax.xaxis.set_ticks([40, 50, 60, 80, 100, 150, 200])
     ax.set_xticklabels([])
 
 # Top row: x-axis at top
 for ax in axes[0, :]:
     ax.xaxis.tick_top()
     ax.xaxis.set_label_position('top')
-    ax.set_xlabel(r'$M_{1}$')
-    ax.xaxis.set_ticks([50, 60, 80, 100, 150, 200])
-    ax.set_xticklabels([50, 60, 80, 100, 150, 200])
+    ax.set_xlabel(r'$\mathrm{M}_{1}$')
+    ax.xaxis.set_ticks([40, 50, 60, 80, 100, 150, 200])
+    ax.set_xticklabels(['', 50, 60, 80, 100, 150, 200])
     ax.set_ylim(0.1, 1)
 
 
 # Bottom row: x-axis at bottom
 for ax in axes[1, :]:
-    ax.set_xlabel(r'$M_{1}$')
-    ax.xaxis.set_ticks([50, 60, 80, 100, 150, 200])
-    ax.set_xticklabels([50, 60, 80, 100, 150, 200])
+    ax.set_xlabel(r'$\mathrm{M}_{1}$')
+    ax.xaxis.set_ticks([40, 50, 60, 80, 100, 150, 200])
+    ax.set_xticklabels(['', 50, 60, 80, 100, 150, 200])
 
-axes[0, 0].set_ylabel(r'$q = M_2/M_1$')
+axes[0, 0].set_ylabel(r'$q = \mathrm{M}_2/\mathrm{M}_1$')
 axes[1, 0].set_ylabel(r'$\chi_\mathrm{eff}$')
 
 for ax in axes[:, 1]:
@@ -179,5 +179,5 @@ for ax in axes[:, 2]:
     ax.yaxis.set_label_position('right')
     
 output_dir = '../figures'
-plt.savefig(f'{output_dir}/png/intrinsic_kick_GRMHD.png', bbox_inches='tight', dpi=300)
-plt.savefig(f'{output_dir}/pdf/intrinsic_kick_GRMHD.pdf', bbox_inches='tight')
+plt.savefig(f'{output_dir}/png/m1qchieff_kick_GRMHD.png', bbox_inches='tight', dpi=300)
+plt.savefig(f'{output_dir}/pdf/m1qchieff_kick_GRMHD.pdf', bbox_inches='tight')
