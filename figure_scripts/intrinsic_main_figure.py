@@ -21,9 +21,11 @@ from posydon.config import PATH_TO_POSYDON
 
 plt.style.use(str(Path(PATH_TO_POSYDON) / 'posydon' / 'visualization' / 'posydon.mplstyle'))
 
+MASS_CUTOFF = 39.76734837  # Mass cutoff for the analysis
+# based on BGP bin
 
 # Load BGP data from Anarya (send on slack)
-data_file = "/home/users/b/briel/scratch/high_mass_physics/data/hm_dists.h5"
+data_file = "../data/hm_dists_gwtc5_40.h5"
 
 with h5py.File(data_file, "r") as hf:
     matrix1 = hf["2D"]["p_m1q"][()]
@@ -38,9 +40,8 @@ with h5py.File(data_file, "r") as hf:
 cm = Colormap('tol:YlOrBr')
 cm_grays = Colormap('colorbrewer:Greys')
 
-
 # Define the data directory and folder types
-data_dir = '/home/users/b/briel/scratch/high_mass_physics/data/main_figure/'
+data_dir = "../data/main_figure/"
 folder_types = ['Eddington-limited', 'GRMHD', 'conservative']
 SFH_type = 'IllustrisTNG'
 
@@ -60,7 +61,7 @@ for i, folder_type in enumerate(folder_types):
     data = Rates(co_contact_file, 'BBH', SFH_type)
     print("Rates data loaded.")
     max_mass = np.maximum(data.population['S1_mass'].values, data.population['S2_mass'].values)
-    mask = max_mass > 44.2
+    mask = max_mass >= MASS_CUTOFF
     z_max = 2
     z_event_mask = data.z_events <= z_max
     volume = get_shell_comoving_volume(0, z_max)
@@ -70,7 +71,7 @@ for i, folder_type in enumerate(folder_types):
     mass_ratio = filtered_population['mass_ratio'].to_numpy()
     chi_eff = filtered_population['chi_eff'].to_numpy()
     
-    # Top row: chirp mass vs mass ratio
+    # Top row: primary mass vs mass ratio
     H0, xedges0, yedges0 = np.histogram2d(M1_mass,
                                           mass_ratio,
                                           bins=(mass_bins, q_bins),
@@ -95,8 +96,7 @@ for i, folder_type in enumerate(folder_types):
 
     axes[0, i].pcolor(mbins, qbins, matrix1.T, norm=LogNorm(vmin=matrix1[matrix1!=0].min(), vmax=matrix1.max()), cmap=cm_grays.to_mpl())
 
-
-    # Top bottom row: Chirp mass vs chi_eff
+    # Top bottom row: primary mass vs chi_eff
     H1, xedges1, yedges1 = np.histogram2d(M1_mass,
                                             chi_eff,
                                             bins=(mass_bins, chi_bins),
@@ -121,9 +121,11 @@ for i, folder_type in enumerate(folder_types):
                       matrix_m1chi.T,
                       norm=LogNorm(vmin=matrix_m1chi[matrix_m1chi!=0].min(),vmax=matrix_m1chi[matrix_m1chi!=0].max()),cmap=cm_grays.to_mpl())
 
-    axes[0, i].set_title(folder_type)
-    
 # axes and stuff
+axes[0, 0].set_title('Eddington-limited')
+axes[0, 1].set_title('GRRMHD')
+axes[0, 2].set_title('Conservative')
+
 for ax in axes.flatten():
     ax.set_xscale('log')
     ax.set_xlim(44, 200)
@@ -134,7 +136,7 @@ for ax in axes.flatten():
 for ax in axes[0, :]:
     ax.xaxis.tick_top()
     ax.xaxis.set_label_position('top')
-    ax.set_xlabel(r'$M_{1}$')
+    ax.set_xlabel(r'$\mathrm{M}_{1}$')
     ax.xaxis.set_ticks([50, 60, 80, 100, 150, 200])
     ax.set_xticklabels([50, 60, 80, 100, 150, 200])
     ax.set_ylim(0.1, 1)
@@ -142,11 +144,11 @@ for ax in axes[0, :]:
 
 # Bottom row: x-axis at bottom
 for ax in axes[1, :]:
-    ax.set_xlabel(r'$M_{1}$')
+    ax.set_xlabel(r'$\mathrm{M}_{1}$')
     ax.xaxis.set_ticks([50, 60, 80, 100, 150, 200])
     ax.set_xticklabels([50, 60, 80, 100, 150, 200])
 
-axes[0, 0].set_ylabel(r'$q = M_2/M_1$')
+axes[0, 0].set_ylabel(r'$q = \mathrm{M}_2/\mathrm{M}_1$')
 axes[1, 0].set_ylabel(r'$\chi_\mathrm{eff}$')
 
 for ax in axes[:, 1]:
@@ -156,6 +158,6 @@ for ax in axes[:, 2]:
     ax.yaxis.tick_right()
     ax.yaxis.set_label_position('right')
     
-output_dir = '/home/users/b/briel/scratch/high_mass_physics/figures'
-plt.savefig(f'{output_dir}/png/intrinsic_main_figure_{SFH_type}.png', bbox_inches='tight', dpi=300)
-plt.savefig(f'{output_dir}/pdf/intrinsic_main_figure_{SFH_type}.pdf', bbox_inches='tight')
+output_dir = "../figures"
+plt.savefig(f'{output_dir}/png/m1qchieff_accretion_no_kick.png', bbox_inches='tight', dpi=300)
+plt.savefig(f'{output_dir}/pdf/m1qchieff_accretion_no_kick.pdf', bbox_inches='tight')
