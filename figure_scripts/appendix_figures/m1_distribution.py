@@ -28,7 +28,7 @@ with h5py.File(data_file, "r") as hf:
     pdf_m1 = hf["1D"]["p_mass1"][:]
 
 
-Rp_m1 = np.array(pdf_m1)  * (1 + Z_EVAL) ** 2.7
+Rp_m1 = np.array(pdf_m1) * (1 + Z_EVAL) ** 2.7
 Rpm_5 = np.percentile(Rp_m1, q=5, axis=0)
 Rpm_95 = np.percentile(Rp_m1, q=95, axis=0)
 R_pm_med = np.percentile(Rp_m1, q=50, axis=0)
@@ -67,7 +67,7 @@ def get_histogram_data(co_contact_file):
     mask = max_mass >= MASS_CUTOFF
     z_event_mask = (data.z_events >= Z_MIN) & (data.z_events <= Z_MAX)
     volume = get_shell_comoving_volume(Z_MIN, Z_MAX)
-    
+
     weights = data.weights[z_event_mask][mask]
     filtered_population = data.population[mask]
     S1_mass = np.where(

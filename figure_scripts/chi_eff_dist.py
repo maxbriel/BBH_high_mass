@@ -60,6 +60,7 @@ SFH_type = "IllustrisTNG"
 
 ax = axes[0]
 
+
 def get_histogram_data(co_contact_file):
 
     data = Rates(co_contact_file, "BBH", SFH_type)
@@ -71,7 +72,7 @@ def get_histogram_data(co_contact_file):
     mask = max_mass >= MASS_CUTOFF
     z_event_mask = (data.z_events >= Z_MIN) & (data.z_events <= Z_MAX)
     volume = get_shell_comoving_volume(Z_MIN, Z_MAX)
-    
+
     weights = data.weights[z_event_mask][mask]
     filtered_population = data.population[mask]
     chief_eff = filtered_population["chi_eff"].to_numpy()
@@ -103,12 +104,14 @@ for i, folder_type in enumerate(folder_types):
     if folder_type == "conservative":
         label = "Conservative"
 
-    ax.step(chieff_bins[:-1],
-            h / np.sum(h * np.diff(chieff_bins)),
-            lw=2,
-            label=label,
-            color=colours[i],
-            where="post")
+    ax.step(
+        chieff_bins[:-1],
+        h / np.sum(h * np.diff(chieff_bins)),
+        lw=2,
+        label=label,
+        color=colours[i],
+        where="post",
+    )
 
 
 # low kicked populations

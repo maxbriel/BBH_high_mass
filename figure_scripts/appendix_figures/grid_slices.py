@@ -18,8 +18,10 @@ from matplotlib.lines import Line2D
 from posydon.config import PATH_TO_POSYDON, PATH_TO_POSYDON_DATA
 from posydon.grids.psygrid import PSyGrid
 from posydon.popsyn.synthetic_population import Population, Rates
-from posydon.utils.common_functions import (convert_metallicity_to_string,
-                                            inspiral_timescale_from_separation)
+from posydon.utils.common_functions import (
+    convert_metallicity_to_string,
+    inspiral_timescale_from_separation,
+)
 
 # Suppress warnings about missing ini parameters
 warnings.filterwarnings("ignore", message="Missing ini parameter:.*")

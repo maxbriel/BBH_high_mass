@@ -7,8 +7,12 @@ import numpy as np
 import pandas as pd
 from cmap import Colormap
 from matplotlib.colors import LogNorm
-from matplotlib.ticker import (AutoMinorLocator, LogLocator, MultipleLocator,
-                               NullFormatter)
+from matplotlib.ticker import (
+    AutoMinorLocator,
+    LogLocator,
+    MultipleLocator,
+    NullFormatter,
+)
 from posydon.config import PATH_TO_POSYDON
 from posydon.popsyn.rate_calculation import get_shell_comoving_volume
 from posydon.popsyn.synthetic_population import Rates
@@ -35,7 +39,7 @@ with h5py.File(data_file, "r") as hf:
     matrix_m1chi = hf["2D"]["p_m1chi"][()]
     mbins = hf["2D"]["mass1"][()]
     chibins = hf["2D"]["chi_eff"][()]
-    
+
 # BGP is at z=0 and assumes (1+z)^2.7 evolution.
 # We scale the BGP distribution to match the redshift range.
 matrix1 = np.array(matrix1) * (1 + Z_EVAL) ** 2.7
@@ -69,7 +73,7 @@ def get_histogram_data(co_contact_file):
     mask = max_mass >= MASS_CUTOFF
     z_event_mask = (data.z_events >= Z_MIN) & (data.z_events <= Z_MAX)
     volume = get_shell_comoving_volume(Z_MIN, Z_MAX)
-    
+
     weights = data.weights[z_event_mask][mask]
     filtered_population = data.population[mask]
     M1_mass = max_mass[mask]
@@ -174,7 +178,6 @@ for i, folder_type in enumerate(folder_types):
         linewidths=[2.0, 2.0, 2.0],
     )
 
-
     axes[1, i].pcolor(
         mbins,
         chibins,
@@ -210,7 +213,7 @@ for ax in axes[0, :]:
     ax.xaxis.set_label_position("top")
     ax.set_xlabel(r"$\mathrm{M}_{1}$ $[\mathrm{M}_{\odot}]$")
     ax.xaxis.set_ticks([40, 50, 60, 80, 100, 150, 200])
-    ax.set_xticklabels(['', 50, 60, 80, 100, 150, 200])
+    ax.set_xticklabels(["", 50, 60, 80, 100, 150, 200])
     ax.set_ylim(0.1, 1)
 
 
@@ -218,7 +221,7 @@ for ax in axes[0, :]:
 for ax in axes[1, :]:
     ax.set_xlabel(r"$\mathrm{M}_{1}$ $[\mathrm{M}_{\odot}]$")
     ax.xaxis.set_ticks([40, 50, 60, 80, 100, 150, 200])
-    ax.set_xticklabels(['', 50, 60, 80, 100, 150, 200])
+    ax.set_xticklabels(["", 50, 60, 80, 100, 150, 200])
     ax.set_ylim(-1, 1)
 
 axes[0, 0].set_ylabel(r"$q = \mathrm{M}_2/\mathrm{M}_1$")

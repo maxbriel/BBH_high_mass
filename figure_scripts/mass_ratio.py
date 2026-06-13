@@ -72,7 +72,7 @@ def get_histogram_data(co_contact_file):
     mask = max_mass >= MASS_CUTOFF
     z_event_mask = (data.z_events >= Z_MIN) & (data.z_events <= Z_MAX)
     volume = get_shell_comoving_volume(Z_MIN, Z_MAX)
-    
+
     weights = data.weights[z_event_mask][mask]
     filtered_population = data.population[mask]
     mass_ratio = filtered_population["mass_ratio"].to_numpy()
@@ -89,7 +89,6 @@ def get_histogram_data(co_contact_file):
 
 # no kick population
 for i, folder_type in enumerate(folder_types):
-
     co_contact_file = os.path.join(
         data_dir,
         folder_type + ".h5",

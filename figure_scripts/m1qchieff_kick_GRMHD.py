@@ -7,8 +7,12 @@ import numpy as np
 import pandas as pd
 from cmap import Colormap
 from matplotlib.colors import LogNorm
-from matplotlib.ticker import (AutoMinorLocator, LogLocator, MultipleLocator,
-                               NullFormatter)
+from matplotlib.ticker import (
+    AutoMinorLocator,
+    LogLocator,
+    MultipleLocator,
+    NullFormatter,
+)
 from posydon.config import PATH_TO_POSYDON
 from posydon.popsyn.rate_calculation import get_shell_comoving_volume
 from posydon.popsyn.synthetic_population import Rates
@@ -177,9 +181,9 @@ for i, folder_type in enumerate(folder_types):
         ),
         cmap=cm_grays.to_mpl(),
     )
-    
+
     #  Rate density
-    rate_density = np.nansum(weights)/volume
+    rate_density = np.nansum(weights) / volume
     print(folder_type, "rate density:", rate_density, "Gpc^-3 yr^-1")
 
 

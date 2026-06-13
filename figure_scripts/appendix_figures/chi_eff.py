@@ -103,9 +103,14 @@ for i, folder_type in enumerate(folder_types):
     if folder_type == "conservative":
         label = "Conservative"
 
-    ax.step(chieff_bins[:-1],
-            h / np.sum(h * np.diff(chieff_bins)),
-            lw=2, label=label, color=colours[i], where="post")
+    ax.step(
+        chieff_bins[:-1],
+        h / np.sum(h * np.diff(chieff_bins)),
+        lw=2,
+        label=label,
+        color=colours[i],
+        where="post",
+    )
 
 
 # low kicked populations

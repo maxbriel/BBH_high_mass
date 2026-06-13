@@ -70,6 +70,7 @@ colours = cm([0.1, 0.2, 0.3, 0.5, 0.6, 0.8])
 # define bins for histograms
 chi_p_bins = np.linspace(-0.1, 1.1, 51)
 
+
 def get_histogram_data(co_contact_file):
     data = Rates(co_contact_file, "BBH", SFH_type)
     print(co_contact_file)
@@ -80,7 +81,7 @@ def get_histogram_data(co_contact_file):
     mask = max_mass >= MASS_CUTOFF
     z_event_mask = (data.z_events >= Z_MIN) & (data.z_events <= Z_MAX)
     volume = get_shell_comoving_volume(Z_MIN, Z_MAX)
-    
+
     weights = data.weights[z_event_mask][mask]
     filtered_population = data.population[mask]
     chi_p = precession(

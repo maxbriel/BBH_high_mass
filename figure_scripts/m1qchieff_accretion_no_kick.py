@@ -7,8 +7,12 @@ import numpy as np
 import pandas as pd
 from cmap import Colormap
 from matplotlib.colors import LogNorm
-from matplotlib.ticker import (AutoMinorLocator, LogLocator, MultipleLocator,
-                               NullFormatter)
+from matplotlib.ticker import (
+    AutoMinorLocator,
+    LogLocator,
+    MultipleLocator,
+    NullFormatter,
+)
 from posydon.config import PATH_TO_POSYDON
 from posydon.popsyn.rate_calculation import get_shell_comoving_volume
 from posydon.popsyn.synthetic_population import Rates
@@ -61,14 +65,13 @@ fig, axes = plt.subplots(2, 3, figsize=(3.38 * 2, 2.535 * 1.7))
 plt.subplots_adjust(wspace=0.05, hspace=0.05)
 
 for i, folder_type in enumerate(folder_types):
-    
     # Load population data for the current folder type
     co_contact_file = os.path.join(
         data_dir,
         folder_type + ".h5",
     )
     # suppress print statements from Rates class
-    
+
     data = Rates(co_contact_file, "BBH", SFH_type)
     max_mass = np.maximum(
         data.population["S1_mass"].values, data.population["S2_mass"].values
@@ -134,7 +137,6 @@ for i, folder_type in enumerate(folder_types):
         cmap=cm_grays.to_mpl(),
     )
 
-
     # Top bottom row: primary mass vs chi_eff
     H1, xedges1, yedges1 = np.histogram2d(
         M1_mass,
@@ -184,9 +186,9 @@ for i, folder_type in enumerate(folder_types):
         ),
         cmap=cm_grays.to_mpl(),
     )
-    
+
     #  Rate density
-    rate_density = np.nansum(weights)/volume
+    rate_density = np.nansum(weights) / volume
     print(folder_type, "rate density:", rate_density, "Gpc^-3 yr^-1")
 
 # axes and stuff

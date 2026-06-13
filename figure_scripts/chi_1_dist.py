@@ -36,14 +36,15 @@ colours = cm([0.1, 0.2, 0.3, 0.5, 0.7, 0.8, 0.9])
 # define bins for histograms/contours
 chi1_bins = np.linspace(0, 1.1, 36)
 
+
 def get_histogram_data(co_contact_file):
-    
+
     data = Rates(co_contact_file, "BBH", SFH_type)
     print(co_contact_file)
     max_mass = np.maximum(
         data.population["S1_mass"].values, data.population["S2_mass"].values
     )
-    mask = max_mass >=  MASS_CUTOFF
+    mask = max_mass >= MASS_CUTOFF
     z_event_mask = (data.z_events >= Z_MIN) & (data.z_events <= Z_MAX)
     volume = get_shell_comoving_volume(Z_MIN, Z_MAX)
     weights = data.weights[z_event_mask][mask]

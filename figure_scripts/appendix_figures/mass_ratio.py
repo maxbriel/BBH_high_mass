@@ -84,13 +84,12 @@ def get_histogram_data(co_contact_file):
         bins=mass_ratio_bins,
         weights=np.nansum(weights, axis=1) / volume,
     )
-    
+
     return h / np.diff(mass_ratio_bins)
 
 
 # no kick population
 for i, folder_type in enumerate(folder_types):
-
     co_contact_file = os.path.join(data_dir, folder_type, "no_kick.h5")
     h = get_histogram_data(co_contact_file)
     # set label
