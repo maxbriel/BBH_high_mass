@@ -15,8 +15,13 @@ plt.style.use(
     str(Path(PATH_TO_POSYDON) / "posydon" / "visualization" / "posydon.mplstyle")
 )
 
+MASS_CUTOFF = 39.76734837  # Mass cutoff for the analysis
+Z_MIN = 0.15
+Z_MAX = 0.25
+Z_EVAL = 0.2
+
 # load BGP data from Anarya (send on slack)
-data_file = "../data/hm_dists.h5"
+data_file = "../data/hm_dists_gwtc5_40.h5"
 
 with h5py.File(data_file, "r") as hf:
     mass_ratio_bins_model = hf["1D"]["mass_ratio"][:]
@@ -37,7 +42,7 @@ cm = Colormap("tol:vibrant")
 colours = cm([0.1, 0.5, 0.8])
 
 # define bins
-mass_ratio_bins = np.linspace(0, 1.1, 39)
+mass_ratio_bins = np.linspace(0, 1.1, 31)
 
 # setup figure
 fig, axes = plt.subplots(1, 3, figsize=(3.38 * 2, 2.535 * 0.8))
@@ -60,15 +65,14 @@ ax = axes[0]
 def get_histogram_data(co_contact_file):
 
     data = Rates(co_contact_file, "BBH", SFH_type)
-    print("Rates data loaded.")
 
     max_mass = np.maximum(
         data.population["S1_mass"].values, data.population["S2_mass"].values
     )
-    mask = max_mass > 44.2
-    z_max = 2
-    z_event_mask = data.z_events <= z_max
-    volume = get_shell_comoving_volume(0, z_max)
+    mask = max_mass >= MASS_CUTOFF
+    z_event_mask = (data.z_events >= Z_MIN) & (data.z_events <= Z_MAX)
+    volume = get_shell_comoving_volume(Z_MIN, Z_MAX)
+    
     weights = data.weights[z_event_mask][mask]
     filtered_population = data.population[mask]
     mass_ratio = filtered_population["mass_ratio"].to_numpy()
@@ -85,7 +89,6 @@ def get_histogram_data(co_contact_file):
 
 # no kick population
 for i, folder_type in enumerate(folder_types):
-    print(f"Processing folder: {folder_type}")
 
     co_contact_file = os.path.join(
         data_dir,
