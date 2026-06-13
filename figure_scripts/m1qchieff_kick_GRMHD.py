@@ -19,6 +19,9 @@ plt.style.use(
 )
 
 MASS_CUTOFF = 39.76734837  # Mass cutoff for the analysis
+Z_MIN = 0.15
+Z_MAX = 0.25
+Z_EVAL = 0.2
 
 # Load BGP data from Anarya (send on slack)
 data_file = "../data/hm_dists_gwtc5_40.h5"
@@ -32,8 +35,8 @@ with h5py.File(data_file, "r") as hf:
     mbins = hf["2D"]["mass1"][()]
     chibins = hf["2D"]["chi_eff"][()]
 
-matrix1 = np.array(matrix1) * (1 + 0.2) ** 2.7
-matrix_m1chi = np.array(matrix_m1chi) * (1 + 0.2) ** 2.7
+matrix1 = np.array(matrix1) * (1 + Z_EVAL) ** 2.7
+matrix_m1chi = np.array(matrix_m1chi) * (1 + Z_EVAL) ** 2.7
 
 # Define colormaps
 cm = Colormap("tol:YlOrBr")
@@ -54,17 +57,14 @@ plt.subplots_adjust(wspace=0.05, hspace=0.05)
 def get_histogram_data(co_contact_file):
 
     data = Rates(co_contact_file, "BBH", SFH_type)
-    print("Rates data loaded.")
 
     max_mass = np.maximum(
         data.population["S1_mass"].values, data.population["S2_mass"].values
     )
     mask = max_mass >= MASS_CUTOFF
 
-    z_max = 0.25
-    z_min = 0.15
-    z_event_mask = (data.z_events >= z_min) & (data.z_events <= z_max)
-    volume = get_shell_comoving_volume(z_min, z_max)
+    z_event_mask = (data.z_events >= Z_MIN) & (data.z_events <= Z_MAX)
+    volume = get_shell_comoving_volume(Z_MIN, Z_MAX)
 
     weights = data.weights[z_event_mask][mask]
     filtered_population = data.population[mask]
@@ -76,8 +76,6 @@ def get_histogram_data(co_contact_file):
 
 
 for i, folder_type in enumerate(folder_types):
-    print(f"Processing folder: {folder_type}")
-
     M1_mass, mass_ratio, chi_eff, weights, volume = get_histogram_data(
         os.path.join(data_dir, folder_type + ".h5")
     )
@@ -180,22 +178,11 @@ for i, folder_type in enumerate(folder_types):
         ),
         cmap=cm_grays.to_mpl(),
     )
+    
+    #  Rate density
+    rate_density = np.nansum(weights)/volume
+    print(folder_type, "rate density:", rate_density, "Gpc^-3 yr^-1")
 
-    # add rate density
-    # rate_density = np.nansum(weights)/volume
-    # axes[1, i].text(0.95,
-    #                 0.15,
-    #                 r'$\mathcal{{R}}_{0{-}2}=$'+f'{rate_density:.1f}'+r'$\,\mathrm{{Gpc}}^{{-3}}\,\mathrm{{yr}}^{{-1}}$',
-    #                 transform=axes[1, i].transAxes,
-    #                 ha='right',
-    #                 va='top',
-    #                 bbox=dict(boxstyle='round,pad=0.2',
-    #                           fc='white',
-    #                           alpha=0.6,
-    #                           edgecolor='grey',
-    #                           lw=0.5,
-    #                           )
-    #                 )
 
 # axes and stuff
 axes[0, 0].set_ylabel(r"$q=\mathrm{M}_\mathrm{min}/\mathrm{M}_\mathrm{max}$")
