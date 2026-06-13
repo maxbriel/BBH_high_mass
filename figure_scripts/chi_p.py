@@ -43,6 +43,12 @@ plt.style.use(
     str(Path(PATH_TO_POSYDON) / "posydon" / "visualization" / "posydon.mplstyle")
 )
 
+# define limits
+
+MASS_CUTOFF = 39.76734837  # Mass cutoff for the analysis
+Z_MIN = 0.15
+Z_MAX = 0.25
+
 # Plot mean with filled uncertainty region
 fig, ax = plt.subplots(1, 1, figsize=(3.38, 2.535))
 
@@ -59,23 +65,22 @@ title_mapping = {
 }
 
 cm = Colormap("tol:vibrant")
-
 colours = cm([0.1, 0.2, 0.3, 0.5, 0.6, 0.8])
 
+# define bins for histograms
 chi_p_bins = np.linspace(-0.1, 1.1, 51)
-
 
 def get_histogram_data(co_contact_file):
     data = Rates(co_contact_file, "BBH", SFH_type)
-    print("Rates data loaded.")
+    print(co_contact_file)
 
     max_mass = np.maximum(
         data.population["S1_mass"].values, data.population["S2_mass"].values
     )
-    mask = max_mass > 44.2
-    z_max = 2
-    z_event_mask = data.z_events <= z_max
-    volume = get_shell_comoving_volume(0, z_max)
+    mask = max_mass >= MASS_CUTOFF
+    z_event_mask = (data.z_events >= Z_MIN) & (data.z_events <= Z_MAX)
+    volume = get_shell_comoving_volume(Z_MIN, Z_MAX)
+    
     weights = data.weights[z_event_mask][mask]
     filtered_population = data.population[mask]
     chi_p = precession(
@@ -152,13 +157,12 @@ for i, folder_type in enumerate(folder_types):
         color=colours[i + 4],
     )
 
-# plt.ylim(1e-3, 20)
 plt.ylim(0)
 plt.xlim(-0.03, 1.0)
 plt.xlabel("$\chi_{p}$")
 plt.ylabel("d$\mathcal{R}$/d$\chi_{p}$ [Gpc$^{-3}$ yr$^{-1}$]")
 plt.legend(ncol=1, bbox_to_anchor=(0.95, 1.0), loc="upper right")
 
-output_dir = "/Users/max/Documents/projects/BBH_high_mass/figures"
+output_dir = "../figures"
 plt.savefig(f"{output_dir}/png/intrinsic_chi_p.png", dpi=300, bbox_inches="tight")
 plt.savefig(f"{output_dir}/pdf/intrinsic_chi_p.pdf", bbox_inches="tight")
