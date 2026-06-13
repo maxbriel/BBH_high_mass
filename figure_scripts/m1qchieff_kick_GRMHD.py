@@ -7,12 +7,8 @@ import numpy as np
 import pandas as pd
 from cmap import Colormap
 from matplotlib.colors import LogNorm
-from matplotlib.ticker import (
-    AutoMinorLocator,
-    LogLocator,
-    MultipleLocator,
-    NullFormatter,
-)
+from matplotlib.ticker import (AutoMinorLocator, LogLocator, MultipleLocator,
+                               NullFormatter)
 from posydon.config import PATH_TO_POSYDON
 from posydon.popsyn.rate_calculation import get_shell_comoving_volume
 from posydon.popsyn.synthetic_population import Rates
