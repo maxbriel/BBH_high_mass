@@ -19,8 +19,13 @@ plt.style.use(
 )
 
 
+MASS_CUTOFF = 39.76734837  # Mass cutoff for the analysis
+Z_MIN = 0.15
+Z_MAX = 0.25
+Z_EVAL = 0.2
+
 # Load BGP data from Anarya (send on slack)
-data_file = "../../data/hm_dists.h5"
+data_file = "../../data/hm_dists_gwtc5_40.h5"
 
 with h5py.File(data_file, "r") as hf:
     matrix1 = hf["2D"]["p_m1q"][()]
@@ -30,15 +35,19 @@ with h5py.File(data_file, "r") as hf:
     matrix_m1chi = hf["2D"]["p_m1chi"][()]
     mbins = hf["2D"]["mass1"][()]
     chibins = hf["2D"]["chi_eff"][()]
+    
+# BGP is at z=0 and assumes (1+z)^2.7 evolution.
+# We scale the BGP distribution to match the redshift range.
+matrix1 = np.array(matrix1) * (1 + Z_EVAL) ** 2.7
+matrix_m1chi = np.array(matrix_m1chi) * (1 + Z_EVAL) ** 2.7
 
 # Define colormaps
 cm = Colormap("tol:YlOrBr")
 cm_grays = Colormap("colorbrewer:Greys")
 
-
 # Define the data directory and folder types
-data_dir = "../../data/no_H_conserved/GRMHD/"
-folder_types = ["no_kick", "low_kick", "normal_kick"]
+data_dir = "../../data/no_H_conserved"
+folder_types = ["Eddington-limited", "GRMHD", "conservative"]
 SFH_type = "IllustrisTNG"
 
 # define bins for histograms/contours
@@ -53,15 +62,14 @@ plt.subplots_adjust(wspace=0.05, hspace=0.05)
 def get_histogram_data(co_contact_file):
 
     data = Rates(co_contact_file, "BBH", SFH_type)
-    print("Rates data loaded.")
 
     max_mass = np.maximum(
         data.population["S1_mass"].values, data.population["S2_mass"].values
     )
-    mask = max_mass > 44.2
-    z_max = 2
-    z_event_mask = data.z_events <= z_max
-    volume = get_shell_comoving_volume(0, z_max)
+    mask = max_mass >= MASS_CUTOFF
+    z_event_mask = (data.z_events >= Z_MIN) & (data.z_events <= Z_MAX)
+    volume = get_shell_comoving_volume(Z_MIN, Z_MAX)
+    
     weights = data.weights[z_event_mask][mask]
     filtered_population = data.population[mask]
     M1_mass = max_mass[mask]
@@ -74,7 +82,8 @@ def get_histogram_data(co_contact_file):
 for i, folder_type in enumerate(folder_types):
     co_contact_file = os.path.join(
         data_dir,
-        folder_type + ".h5",
+        folder_type,
+        "no_kick.h5",
     )
     M1_mass, mass_ratio, chi_eff, weights, volume = get_histogram_data(co_contact_file)
 
@@ -95,10 +104,24 @@ for i, folder_type in enumerate(folder_types):
     level0_3 = H0_sorted[np.searchsorted(H0_cumsum, 0.997 * H0_total)]
     levels0 = [level0_3, level0_2, level0_1]
 
+    x_centers = 0.5 * (xedges0[:-1] + xedges0[1:])
+    y_centers = 0.5 * (yedges0[:-1] + yedges0[1:])
+    H0_padded = np.pad(H0, pad_width=1, mode="constant", constant_values=0)
+
+    # Extend centers to match the padded array
+    dx = x_centers[1] - x_centers[0]
+    dy = y_centers[1] - y_centers[0]
+    x_centers_padded = np.concatenate(
+        [[x_centers[0] - dx], x_centers, [x_centers[-1] + dx]]
+    )
+    y_centers_padded = np.concatenate(
+        [[y_centers[0] - dy], y_centers, [y_centers[-1] + dy]]
+    )
+
     axes[0, i].contour(
-        mass_bins[1:],
-        q_bins[1:],
-        H0.T,
+        x_centers_padded,
+        y_centers_padded,
+        H0_padded.T,
         levels=levels0,
         colors=cm([0.2, 0.6, 1.0]),
         linewidths=[2.0, 2.0, 2.0],
@@ -128,14 +151,29 @@ for i, folder_type in enumerate(folder_types):
     level1_3 = H1_sorted[np.searchsorted(H1_cumsum, 0.997 * H1_total)]
     levels1 = [level1_3, level1_2, level1_1]
 
+    x_centers = 0.5 * (xedges1[:-1] + xedges1[1:])
+    y_centers = 0.5 * (yedges1[:-1] + yedges1[1:])
+    H1_padded = np.pad(H1, pad_width=1, mode="constant", constant_values=0)
+
+    # Extend centers to match the padded array
+    dx = x_centers[1] - x_centers[0]
+    dy = y_centers[1] - y_centers[0]
+    x_centers_padded = np.concatenate(
+        [[x_centers[0] - dx], x_centers, [x_centers[-1] + dx]]
+    )
+    y_centers_padded = np.concatenate(
+        [[y_centers[0] - dy], y_centers, [y_centers[-1] + dy]]
+    )
+
     axes[1, i].contour(
-        mass_bins[1:],
-        chi_bins[1:],
-        H1.T,
+        x_centers_padded,
+        y_centers_padded,
+        H1_padded.T,
         levels=levels1,
         colors=cm([0.2, 0.6, 1.0]),
         linewidths=[2.0, 2.0, 2.0],
     )
+
 
     axes[1, i].pcolor(
         mbins,
@@ -155,9 +193,9 @@ for i, folder_type in enumerate(folder_types):
 axes[0, 0].set_ylabel(r"$q=M_\mathrm{min}/M_\mathrm{max}$")
 axes[1, 0].set_ylabel(r"$\chi_\mathrm{eff}$")
 
-axes[0, 0].set_title("No kick")
-axes[0, 1].set_title("Low kick")
-axes[0, 2].set_title("Normal kick")
+axes[0, 0].set_title("Eddington-limited")
+axes[0, 1].set_title("GRRMHD")
+axes[0, 2].set_title("Conservative")
 
 # axes and stuff
 for ax in axes.flatten():
@@ -170,19 +208,20 @@ for ax in axes.flatten():
 for ax in axes[0, :]:
     ax.xaxis.tick_top()
     ax.xaxis.set_label_position("top")
-    ax.set_xlabel(r"$M_{1}$")
-    ax.xaxis.set_ticks([50, 60, 80, 100, 150, 200])
-    ax.set_xticklabels([50, 60, 80, 100, 150, 200])
+    ax.set_xlabel(r"$\mathrm{M}_{1}$ $[\mathrm{M}_{\odot}]$")
+    ax.xaxis.set_ticks([40, 50, 60, 80, 100, 150, 200])
+    ax.set_xticklabels(['', 50, 60, 80, 100, 150, 200])
     ax.set_ylim(0.1, 1)
 
 
 # Bottom row: x-axis at bottom
 for ax in axes[1, :]:
-    ax.set_xlabel(r"$M_{1}$")
-    ax.xaxis.set_ticks([50, 60, 80, 100, 150, 200])
-    ax.set_xticklabels([50, 60, 80, 100, 150, 200])
+    ax.set_xlabel(r"$\mathrm{M}_{1}$ $[\mathrm{M}_{\odot}]$")
+    ax.xaxis.set_ticks([40, 50, 60, 80, 100, 150, 200])
+    ax.set_xticklabels(['', 50, 60, 80, 100, 150, 200])
+    ax.set_ylim(-1, 1)
 
-axes[0, 0].set_ylabel(r"$q = M_2/M_1$")
+axes[0, 0].set_ylabel(r"$q = \mathrm{M}_2/\mathrm{M}_1$")
 axes[1, 0].set_ylabel(r"$\chi_\mathrm{eff}$")
 
 for ax in axes[:, 1]:
@@ -194,10 +233,6 @@ for ax in axes[:, 2]:
 
 output_dir = "../../figures"
 plt.savefig(
-    f"{output_dir}/png/appendix_no_H_accretion_GRMHD_kick.png",
-    bbox_inches="tight",
-    dpi=300,
+    f"{output_dir}/png/appendix_no_H_accretion.png", bbox_inches="tight", dpi=300
 )
-plt.savefig(
-    f"{output_dir}/pdf/appendix_no_H_accretion.GRMHD_kick.pdf", bbox_inches="tight"
-)
+plt.savefig(f"{output_dir}/pdf/appendix_no_H_accretion.pdf", bbox_inches="tight")

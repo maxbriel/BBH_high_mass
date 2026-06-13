@@ -62,7 +62,6 @@ def get_histogram_data(co_contact_file):
         data.population["S1_mass"].values, data.population["S2_mass"].values
     )
     mask = max_mass >= MASS_CUTOFF
-
     z_event_mask = (data.z_events >= Z_MIN) & (data.z_events <= Z_MAX)
     volume = get_shell_comoving_volume(Z_MIN, Z_MAX)
 
@@ -203,14 +202,14 @@ for ax in axes.flatten():
 for ax in axes[0, :]:
     ax.xaxis.tick_top()
     ax.xaxis.set_label_position("top")
-    ax.set_xlabel(r"$\mathrm{M}_{1}$")
+    ax.set_xlabel(r"$\mathrm{M}_{1}$ $[\mathrm{M}_{\odot}]$")
     ax.xaxis.set_ticks([40, 50, 60, 80, 100, 150, 200])
     ax.set_xticklabels(["", 50, 60, 80, 100, 150, 200])
     ax.set_ylim(0.1, 1)
 
 # Bottom row: x-axis at bottom
 for ax in axes[1, :]:
-    ax.set_xlabel(r"$\mathrm{M}_{1}$")
+    ax.set_xlabel(r"$\mathrm{M}_{1}$ $[\mathrm{M}_{\odot}]$")
     ax.xaxis.set_ticks([40, 50, 60, 80, 100, 150, 200])
     ax.set_xticklabels(["", 50, 60, 80, 100, 150, 200])
     ax.set_ylim(-1, 1)

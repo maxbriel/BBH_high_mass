@@ -81,7 +81,7 @@ co_contact_file = os.path.join(
     "no_kick.h5",
 )
 h = get_histogram_data(co_contact_file)
-plt.step(chi1_bins[:-1], h, lw=2, where="post", label="GRMHD", color=colours[0])
+plt.step(chi1_bins[:-1], h, lw=2, where="post", label="GRRMHD", color=colours[0])
 
 co_contact_file = os.path.join(
     data_dir,
@@ -89,7 +89,7 @@ co_contact_file = os.path.join(
 )
 h = get_histogram_data(co_contact_file)
 plt.step(
-    chi1_bins[:-1], h, lw=2, where="post", label="GRMHD-Low kick", color=colours[1]
+    chi1_bins[:-1], h, lw=2, where="post", label="GRRMHD-Low kick", color=colours[1]
 )
 
 co_contact_file = os.path.join(
@@ -98,7 +98,7 @@ co_contact_file = os.path.join(
 )
 h = get_histogram_data(co_contact_file)
 plt.step(
-    chi1_bins[:-1], h, lw=2, where="post", label="GRMHD-Normal kick", color=colours[2]
+    chi1_bins[:-1], h, lw=2, where="post", label="GRRMHD-Normal kick", color=colours[2]
 )
 
 

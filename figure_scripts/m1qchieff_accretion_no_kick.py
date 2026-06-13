@@ -204,7 +204,7 @@ for ax in axes.flatten():
 for ax in axes[0, :]:
     ax.xaxis.tick_top()
     ax.xaxis.set_label_position("top")
-    ax.set_xlabel(r"$\mathrm{M}_{1}$")
+    ax.set_xlabel(r"$\mathrm{M}_{1}$ $[\mathrm{M}_{\odot}]$")
     ax.xaxis.set_ticks([40, 50, 60, 80, 100, 150, 200])
     ax.set_xticklabels(["", 50, 60, 80, 100, 150, 200])
     ax.set_ylim(0.1, 1)
@@ -212,7 +212,7 @@ for ax in axes[0, :]:
 
 # Bottom row: x-axis at bottom
 for ax in axes[1, :]:
-    ax.set_xlabel(r"$\mathrm{M}_{1}$")
+    ax.set_xlabel(r"$\mathrm{M}_{1}$ $[\mathrm{M}_{\odot}]$")
     ax.xaxis.set_ticks([40, 50, 60, 80, 100, 150, 200])
     ax.set_xticklabels(["", 50, 60, 80, 100, 150, 200])
     ax.set_ylim(-1, 1)

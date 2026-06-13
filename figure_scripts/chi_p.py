@@ -127,7 +127,7 @@ for i, folder_type in enumerate(folder_types):
         h,
         lw=2,
         where="post",
-        label="GRMHD" + label,
+        label="GRRMHD" + label,
         color=colours[i + 1],
     )
 

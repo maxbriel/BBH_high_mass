@@ -188,7 +188,7 @@ for ax in axes:
     ax.set_yscale("log")
     ax.set_xlim(0.0001, 0.999)
     ax.set_ylim(1e-2, 10)
-    ax.set_xlabel(r"$q = M_2/M_1$")
+    ax.set_xlabel(r"$q = \mathrm{M}_2/\mathrm{M}_1$")
 
 axes[1].set_yticks([])
 axes[2].set_yticks([])

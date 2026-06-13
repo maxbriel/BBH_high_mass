@@ -15,18 +15,23 @@ plt.style.use(
     str(Path(PATH_TO_POSYDON) / "posydon" / "visualization" / "posydon.mplstyle")
 )
 
+MASS_CUTOFF = 39.76734837  # Mass cutoff for the analysis
+Z_MIN = 0.15
+Z_MAX = 0.25
+Z_EVAL = 0.2
+
 # load BGP data from Anarya (send on slack)
-data_file = "../../data/hm_dists.h5"
+data_file = "../../data/hm_dists_gwtc5_40.h5"
 
 with h5py.File(data_file, "r") as hf:
     m1bins = hf["1D"]["mass1"][:]
     pdf_m1 = hf["1D"]["p_mass1"][:]
 
-Rp_m1 = np.array(pdf_m1)
+
+Rp_m1 = np.array(pdf_m1)  * (1 + Z_EVAL) ** 2.7
 Rpm_5 = np.percentile(Rp_m1, q=5, axis=0)
 Rpm_95 = np.percentile(Rp_m1, q=95, axis=0)
 R_pm_med = np.percentile(Rp_m1, q=50, axis=0)
-
 
 # define colourmaps
 cm = Colormap("tol:vibrant")
@@ -54,15 +59,15 @@ ax = axes[0]
 def get_histogram_data(co_contact_file):
 
     data = Rates(co_contact_file, "BBH", SFH_type)
-    print("Rates data loaded.")
+    print(co_contact_file)
 
     max_mass = np.maximum(
         data.population["S1_mass"].values, data.population["S2_mass"].values
     )
-    mask = max_mass > 40
-    z_max = 2
-    z_event_mask = data.z_events <= z_max
-    volume = get_shell_comoving_volume(0, z_max)
+    mask = max_mass >= MASS_CUTOFF
+    z_event_mask = (data.z_events >= Z_MIN) & (data.z_events <= Z_MAX)
+    volume = get_shell_comoving_volume(Z_MIN, Z_MAX)
+    
     weights = data.weights[z_event_mask][mask]
     filtered_population = data.population[mask]
     S1_mass = np.where(
@@ -75,6 +80,7 @@ def get_histogram_data(co_contact_file):
     )
 
     print("max:", np.max(S1_mass[S1_mass < 110]))
+    print("rate", np.nansum(weights.to_numpy()) / volume)
     # get histogram
     h, _ = np.histogram(
         S1_mass,

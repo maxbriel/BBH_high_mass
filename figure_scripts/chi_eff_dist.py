@@ -129,7 +129,7 @@ axes[1].step(
     chieff_bins[:-1],
     h / np.sum(h * np.diff(chieff_bins)),
     lw=2,
-    label="GRMHD",
+    label="GRRMHD",
     color=colours[1],
     where="post",
 )
@@ -165,7 +165,7 @@ axes[2].step(
     chieff_bins[:-1],
     h / np.sum(h * np.diff(chieff_bins)),
     lw=2,
-    label="GRMHD",
+    label="GRRMHD",
     color=colours[1],
     where="post",
 )
