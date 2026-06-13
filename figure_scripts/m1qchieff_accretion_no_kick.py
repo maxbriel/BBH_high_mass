@@ -18,8 +18,12 @@ plt.style.use(
     str(Path(PATH_TO_POSYDON) / "posydon" / "visualization" / "posydon.mplstyle")
 )
 
-MASS_CUTOFF = 39.76734837  # Mass cutoff for the analysis
 # based on BGP bin
+MASS_CUTOFF = 39.76734837  # Mass cutoff for the analysis
+
+Z_MIN = 0.15
+Z_MAX = 0.25
+Z_EVAL = 0.2
 
 # Load BGP data from Anarya (send on slack)
 data_file = "../data/hm_dists_gwtc5_40.h5"
@@ -33,8 +37,11 @@ with h5py.File(data_file, "r") as hf:
     mbins = hf["2D"]["mass1"][()]
     chibins = hf["2D"]["chi_eff"][()]
 
-matrix1 = np.array(matrix1) * (1 + 0.2) ** 2.7
-matrix_m1chi = np.array(matrix_m1chi) * (1 + 0.2) ** 2.7
+# BGP is at z=0 and assumes (1+z)^2.7 evolution.
+# We scale the BGP distribution to match the redshift range.
+# This can be adjusted if wanted.
+matrix1 = np.array(matrix1) * (1 + Z_EVAL) ** 2.7
+matrix_m1chi = np.array(matrix_m1chi) * (1 + Z_EVAL) ** 2.7
 
 # Define colormaps
 cm = Colormap("tol:YlOrBr")
@@ -54,23 +61,22 @@ fig, axes = plt.subplots(2, 3, figsize=(3.38 * 2, 2.535 * 1.7))
 plt.subplots_adjust(wspace=0.05, hspace=0.05)
 
 for i, folder_type in enumerate(folder_types):
-    print(f"Processing folder: {folder_type}")
+    
+    # Load population data for the current folder type
     co_contact_file = os.path.join(
         data_dir,
         folder_type + ".h5",
     )
-    # co_contact_file = os.path.join(folder_path, 'CO_contact.h5')
+    # suppress print statements from Rates class
+    
     data = Rates(co_contact_file, "BBH", SFH_type)
-    print("Rates data loaded.")
     max_mass = np.maximum(
         data.population["S1_mass"].values, data.population["S2_mass"].values
     )
     mask = max_mass >= MASS_CUTOFF
 
-    z_max = 0.25
-    z_min = 0.15
-    z_event_mask = (data.z_events >= z_min) & (data.z_events <= z_max)
-    volume = get_shell_comoving_volume(z_min, z_max)
+    z_event_mask = (data.z_events >= Z_MIN) & (data.z_events <= Z_MAX)
+    volume = get_shell_comoving_volume(Z_MIN, Z_MAX)
 
     weights = data.weights[z_event_mask][mask]
     filtered_population = data.population[mask]
@@ -128,6 +134,7 @@ for i, folder_type in enumerate(folder_types):
         cmap=cm_grays.to_mpl(),
     )
 
+
     # Top bottom row: primary mass vs chi_eff
     H1, xedges1, yedges1 = np.histogram2d(
         M1_mass,
@@ -177,6 +184,10 @@ for i, folder_type in enumerate(folder_types):
         ),
         cmap=cm_grays.to_mpl(),
     )
+    
+    #  Rate density
+    rate_density = np.nansum(weights)/volume
+    print(folder_type, "rate density:", rate_density, "Gpc^-3 yr^-1")
 
 # axes and stuff
 axes[0, 0].set_title("Eddington-limited")

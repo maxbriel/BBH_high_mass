@@ -43,7 +43,7 @@ def get_histogram_data(co_contact_file):
     max_mass = np.maximum(
         data.population["S1_mass"].values, data.population["S2_mass"].values
     )
-    mask = max_mass > MASS_CUTOFF
+    mask = max_mass >=  MASS_CUTOFF
     z_event_mask = (data.z_events >= Z_MIN) & (data.z_events <= Z_MAX)
     volume = get_shell_comoving_volume(Z_MIN, Z_MAX)
     weights = data.weights[z_event_mask][mask]

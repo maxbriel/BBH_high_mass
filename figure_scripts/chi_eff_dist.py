@@ -15,22 +15,26 @@ plt.style.use(
     str(Path(PATH_TO_POSYDON) / "posydon" / "visualization" / "posydon.mplstyle")
 )
 
+MASS_CUTOFF = 39.76734837  # Mass cutoff for the analysis
+Z_MIN = 0.15
+Z_MAX = 0.25
+Z_EVAL = 0.2
+
 # load BGP data from Anarya (send on slack)
-data_file = "../data/hm_dists.h5"
+data_file = "../data/hm_dists_gwtc5_40.h5"
 
 with h5py.File(data_file, "r") as hf:
     chieff_bins_model = hf["1D"]["chi_eff"][:]
     pdf_chieff = hf["1D"]["p_chi_eff"][:]
 
-
 Rp_chieff = (
     np.array(pdf_chieff)
     / np.trapz(np.array(pdf_chieff), chieff_bins_model, axis=1)[:, None]
 )
+
 Rpm_5 = np.percentile(Rp_chieff, q=5, axis=0)
 Rpm_95 = np.percentile(Rp_chieff, q=95, axis=0)
 R_pm_med = np.percentile(Rp_chieff, q=50, axis=0)
-
 
 # define colourmaps
 cm = Colormap("tol:vibrant")
@@ -56,19 +60,18 @@ SFH_type = "IllustrisTNG"
 
 ax = axes[0]
 
-
 def get_histogram_data(co_contact_file):
 
     data = Rates(co_contact_file, "BBH", SFH_type)
-    print("Rates data loaded.")
+    print(co_contact_file)
 
     max_mass = np.maximum(
         data.population["S1_mass"].values, data.population["S2_mass"].values
     )
-    mask = max_mass > 44.2
-    z_max = 2
-    z_event_mask = data.z_events <= z_max
-    volume = get_shell_comoving_volume(0, z_max)
+    mask = max_mass >= MASS_CUTOFF
+    z_event_mask = (data.z_events >= Z_MIN) & (data.z_events <= Z_MAX)
+    volume = get_shell_comoving_volume(Z_MIN, Z_MAX)
+    
     weights = data.weights[z_event_mask][mask]
     filtered_population = data.population[mask]
     chief_eff = filtered_population["chi_eff"].to_numpy()
@@ -90,8 +93,6 @@ def get_histogram_data(co_contact_file):
 
 # no kick population
 for i, folder_type in enumerate(folder_types):
-    print(f"Processing folder: {folder_type}")
-
     co_contact_file = os.path.join(
         data_dir,
         folder_type + ".h5",
@@ -102,7 +103,12 @@ for i, folder_type in enumerate(folder_types):
     if folder_type == "conservative":
         label = "Conservative"
 
-    ax.step(chieff_bins[:-1], h, lw=2, label=label, color=colours[i], where="post")
+    ax.step(chieff_bins[:-1],
+            h / np.sum(h * np.diff(chieff_bins)),
+            lw=2,
+            label=label,
+            color=colours[i],
+            where="post")
 
 
 # low kicked populations

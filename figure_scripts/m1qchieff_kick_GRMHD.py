@@ -102,6 +102,7 @@ for i, folder_type in enumerate(folder_types):
     x_centers = 0.5 * (xedges0[:-1] + xedges0[1:])
     y_centers = 0.5 * (yedges0[:-1] + yedges0[1:])
     H0_padded = np.pad(H0, pad_width=1, mode="constant", constant_values=0)
+
     # Extend centers to match the padded array
     dx = x_centers[1] - x_centers[0]
     dy = y_centers[1] - y_centers[0]
@@ -149,6 +150,7 @@ for i, folder_type in enumerate(folder_types):
     x_centers = 0.5 * (xedges1[:-1] + xedges1[1:])
     y_centers = 0.5 * (yedges1[:-1] + yedges1[1:])
     H1_padded = np.pad(H1, pad_width=1, mode="constant", constant_values=0)
+
     # Extend centers to match the padded array
     dx = x_centers[1] - x_centers[0]
     dy = y_centers[1] - y_centers[0]
