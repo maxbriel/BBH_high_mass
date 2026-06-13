@@ -14,6 +14,9 @@ plt.style.use(
     str(Path(PATH_TO_POSYDON) / "posydon" / "visualization" / "posydon.mplstyle")
 )
 
+MASS_CUTOFF = 39.76734837  # Mass cutoff for the analysis
+Z_MIN = 0.15
+Z_MAX = 0.25
 
 # Define the data directory and folder types
 data_dir = "../data/main_figure/"
@@ -26,24 +29,23 @@ title_mapping = {
     "normal_kick": "-Normal",
 }
 
+# setup colourmaps
 cm = Colormap("tol:vibrant")
-
 colours = cm([0.1, 0.2, 0.3, 0.5, 0.7, 0.8, 0.9])
 
+# define bins for histograms/contours
 chi1_bins = np.linspace(0, 1.1, 36)
 
-
 def get_histogram_data(co_contact_file):
+    
     data = Rates(co_contact_file, "BBH", SFH_type)
-    print("Rates data loaded.")
-
+    print(co_contact_file)
     max_mass = np.maximum(
         data.population["S1_mass"].values, data.population["S2_mass"].values
     )
-    mask = max_mass > 44.2
-    z_max = 2
-    z_event_mask = data.z_events <= z_max
-    volume = get_shell_comoving_volume(0, z_max)
+    mask = max_mass > MASS_CUTOFF
+    z_event_mask = (data.z_events >= Z_MIN) & (data.z_events <= Z_MAX)
+    volume = get_shell_comoving_volume(Z_MIN, Z_MAX)
     weights = data.weights[z_event_mask][mask]
     filtered_population = data.population[mask]
     chi1 = np.where(
@@ -56,7 +58,7 @@ def get_histogram_data(co_contact_file):
     h, _ = np.histogram(
         chi1, bins=chi1_bins, weights=np.nansum(weights, axis=1) / volume, density=True
     )
-
+    print("Total rate density:", np.nansum(weights) / volume, "Gpc^-3 yr^-1")
     return h
 
 
