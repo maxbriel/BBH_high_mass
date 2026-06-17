@@ -54,7 +54,6 @@ fig, ax = plt.subplots(1, 1, figsize=(3.38, 2.535))
 
 # Define the data directory and folder types
 data_dir = "../data/main_figure/"
-folder_types = ["Eddington-limited", "GRMHD", "conservative"]
 SFH_type = "IllustrisTNG"
 
 
@@ -121,7 +120,7 @@ for i, folder_type in enumerate(folder_types):
     if folder_type in tuple(title_mapping.keys()):
         label = title_mapping[folder_type]
     else:
-        label = folder_type
+        label = folder_type    
 
     plt.step(
         chi_p_bins[:-1],

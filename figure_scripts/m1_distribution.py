@@ -33,6 +33,13 @@ Rpm_5 = np.percentile(Rp_m1, q=5, axis=0)
 Rpm_95 = np.percentile(Rp_m1, q=95, axis=0)
 R_pm_med = np.percentile(Rp_m1, q=50, axis=0)
 
+# output the BGP rate above the mass cutoff
+mask = m1bins >= MASS_CUTOFF
+rate_above_cutoff = np.trapz(R_pm_med[mask], m1bins[mask])
+print(f"BGP rate above {MASS_CUTOFF} Msun: {rate_above_cutoff:.2f} Gpc^-3 yr^-1")
+lower_bound = np.trapz(Rpm_5[mask], m1bins[mask])
+upper_bound = np.trapz(Rpm_95[mask], m1bins[mask])
+print(f"BGP rate above {MASS_CUTOFF} Msun (5th-95th percentile): {lower_bound:.2f} - {upper_bound:.2f} Gpc^-3 yr^-1")
 
 # define colourmaps
 cm = Colormap("tol:vibrant")
@@ -105,6 +112,8 @@ for i, folder_type in enumerate(folder_types):
     label = folder_type
     if folder_type == "conservative":
         label = "Conservative"
+    elif folder_type == "GRMHD":
+        label = "GRRMHD"
 
     ax.step(mass_bins[:-1], h, lw=2, label=label, color=colours[i], where="post")
 

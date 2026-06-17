@@ -103,6 +103,8 @@ for i, folder_type in enumerate(folder_types):
     label = folder_type
     if folder_type == "conservative":
         label = "Conservative"
+    elif folder_type == "GRMHD":
+        label = "GRRMHD"
 
     ax.step(
         chieff_bins[:-1],
