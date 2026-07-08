@@ -45,12 +45,12 @@ colours = cm([0.1, 0.5, 0.8])
 chieff_bins = np.linspace(-1, 1.1, 36)
 
 # setup figure
-fig, axes = plt.subplots(1, 3, figsize=(3.38 * 2, 2.535 * 0.8))
+fig, axes = plt.subplots(1, 3, figsize=(3.38 * 2, 2.535 * 0.7))
 
 # plot BGP distribution
 for ax in axes:
     ax.fill_between(
-        chieff_bins_model, Rpm_5, Rpm_95, alpha=0.3, color="gray", label="BGP"
+        chieff_bins_model, Rpm_5, Rpm_95, alpha=0.3, color="gray", label="LVK $\\texttt{GWTC-5.0}$"
     )
 
 
@@ -194,7 +194,7 @@ ax.set_title("No kick")
 for ax in axes:
     ax.set_yscale("log")
     ax.set_xlim(-0.999, 0.999)
-    ax.set_ylim(1e-3, 2e2)
+    ax.set_ylim(1e-2, 2e1)
     ax.set_xlabel(r"$\chi_\mathrm{eff}$")
 #     ax.set_xticks([50, 60, 80,  100, 150, 200])
 #     ax.set_xticklabels([50, 60,  80,  100, 150, 200])

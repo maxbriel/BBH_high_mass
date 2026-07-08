@@ -50,7 +50,7 @@ Z_MIN = 0.15
 Z_MAX = 0.25
 
 # Plot mean with filled uncertainty region
-fig, ax = plt.subplots(1, 1, figsize=(3.38, 2.535))
+fig, ax = plt.subplots(1, 1, figsize=(3.38, 2.535*0.7))
 
 # Define the data directory and folder types
 data_dir = "../data/main_figure/"

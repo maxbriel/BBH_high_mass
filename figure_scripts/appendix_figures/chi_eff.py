@@ -22,7 +22,7 @@ Z_EVAL = 0.2
 
 # load BGP data from Anarya (send on slack)
 #data_file = "../../data/hm_dists_gwtc5_40.h5"
-data_file = "../data/hm_dists_m1rates_gwtc5_39.h5"
+data_file = "../../data/hm_dists_m1rates_gwtc5_39.h5"
 
 
 with h5py.File(data_file, "r") as hf:
@@ -51,7 +51,7 @@ fig, axes = plt.subplots(1, 3, figsize=(3.38 * 2, 2.535 * 0.8))
 # plot BGP distribution
 for ax in axes:
     ax.fill_between(
-        chieff_bins_model, Rpm_5, Rpm_95, alpha=0.3, color="gray", label="BGP"
+        chieff_bins_model, Rpm_5, Rpm_95, alpha=0.3, color="gray", label="LVK $\\texttt{GWTC-5.0}$"
     )
 
 

@@ -47,12 +47,12 @@ colours = cm([0.1, 0.5, 0.8])
 mass_ratio_bins = np.linspace(0, 1.1, 31)
 
 # setup figure
-fig, axes = plt.subplots(1, 3, figsize=(3.38 * 2, 2.535 * 0.8))
+fig, axes = plt.subplots(1, 3, figsize=(3.38 * 2, 2.535 * 0.7))
 
 # plot BGP distribution
 for ax in axes:
     ax.fill_between(
-        mass_ratio_bins_model, Rpm_5, Rpm_95, alpha=0.3, color="gray", label="BGP"
+        mass_ratio_bins_model, Rpm_5, Rpm_95, alpha=0.3, color="gray", label="LVK $\\texttt{GWTC-5.0}$"
     )
 
 
@@ -190,7 +190,7 @@ ax.set_title("No kick")
 for ax in axes:
     ax.set_yscale("log")
     ax.set_xlim(0.0001, 0.999)
-    ax.set_ylim(1e-2, 10)
+    ax.set_ylim(5e-2, 10)
     ax.set_xlabel(r"$q = \mathrm{M}_2/\mathrm{M}_1$")
 
 axes[1].set_yticks([])

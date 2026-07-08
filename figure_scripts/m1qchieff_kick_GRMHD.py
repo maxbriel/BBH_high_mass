@@ -52,7 +52,7 @@ mass_bins = np.linspace(MASS_CUTOFF, 200, 31)
 q_bins = np.linspace(0, 1, 31)
 chi_bins = np.linspace(-1, 1, 51)
 
-fig, axes = plt.subplots(2, 3, figsize=(3.38 * 2, 2.535 * 1.7))
+fig, axes = plt.subplots(2, 3, figsize=(3.38 * 2, 2.535 * 1.4))
 plt.subplots_adjust(wspace=0.05, hspace=0.05)
 
 

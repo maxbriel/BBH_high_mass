@@ -63,7 +63,7 @@ def get_histogram_data(co_contact_file):
     return h
 
 
-fig, ax = plt.subplots(1, 1, figsize=(3.38, 2.535))
+fig, ax = plt.subplots(1, 1, figsize=(3.38, 2.535*0.7))
 
 # Eddington-limited
 co_contact_file = os.path.join(

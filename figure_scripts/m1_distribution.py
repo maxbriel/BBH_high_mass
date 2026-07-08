@@ -50,11 +50,11 @@ colours = cm([0.1, 0.5, 0.8])
 mass_bins = np.logspace(np.log10(40), np.log10(210), 51)
 
 # setup figure
-fig, axes = plt.subplots(1, 3, figsize=(3.38 * 2, 2.535 * 0.8))
+fig, axes = plt.subplots(1, 3, figsize=(3.38 * 2, 2.535 * 0.7))
 
 # plot BGP distribution
 for ax in axes:
-    ax.fill_between(m1bins, Rpm_5, Rpm_95, alpha=0.3, color="gray", label="BGP")
+    ax.fill_between(m1bins, Rpm_5, Rpm_95, alpha=0.3, color="gray", label="LVK $\\texttt{GWTC-5.0}$")
 
 
 # Define the data directory and folder types
