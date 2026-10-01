@@ -71,8 +71,8 @@ co_contact_file = os.path.join(
     "Eddington-limited.h5",
 )
 h = get_histogram_data(co_contact_file)
-plt.step(
-    chi1_bins[:-1], h, lw=2, where="post", label="Eddington-limited", color=colours[-1]
+plt.stairs(
+    h, chi1_bins, baseline=None, lw=2, label="Eddington-limited", color=colours[-1]
 )
 
 data_dir = "../data/kick_figure_GRMHD/"
@@ -82,15 +82,15 @@ co_contact_file = os.path.join(
     "no_kick.h5",
 )
 h = get_histogram_data(co_contact_file)
-plt.step(chi1_bins[:-1], h, lw=2, where="post", label="GRRMHD", color=colours[0])
+plt.stairs(h, chi1_bins, baseline=None, lw=2, label="GRRMHD", color=colours[0])
 
 co_contact_file = os.path.join(
     data_dir,
     "low_kick.h5",
 )
 h = get_histogram_data(co_contact_file)
-plt.step(
-    chi1_bins[:-1], h, lw=2, where="post", label="GRRMHD-Low kick", color=colours[1]
+plt.stairs(
+    h, chi1_bins, baseline=None, lw=2, label="GRRMHD-Low kick", color=colours[1]
 )
 
 co_contact_file = os.path.join(
@@ -98,8 +98,8 @@ co_contact_file = os.path.join(
     "normal_kick.h5",
 )
 h = get_histogram_data(co_contact_file)
-plt.step(
-    chi1_bins[:-1], h, lw=2, where="post", label="GRRMHD-Normal kick", color=colours[2]
+plt.stairs(
+    h, chi1_bins, baseline=None, lw=2, label="GRRMHD-Normal kick", color=colours[2]
 )
 
 
@@ -111,7 +111,7 @@ co_contact_file = os.path.join(
     "conservative.h5",
 )
 h = get_histogram_data(co_contact_file)
-plt.step(chi1_bins[:-1], h, lw=2, where="post", label="Conservative", color=colours[3])
+plt.stairs(h, chi1_bins, baseline=None, lw=2, label="Conservative", color=colours[3])
 
 
 data_dir = "../data/kicks_conservative/"
@@ -120,8 +120,8 @@ co_contact_file = os.path.join(
     "low_kick.h5",
 )
 h = get_histogram_data(co_contact_file)
-plt.step(
-    chi1_bins[:-1], h, lw=2, where="post", label="Cons.-Low kick", color=colours[4]
+plt.stairs(
+    h, chi1_bins, baseline=None, lw=2, label="Cons.-Low kick", color=colours[4]
 )
 
 co_contact_file = os.path.join(
@@ -129,8 +129,8 @@ co_contact_file = os.path.join(
     "normal_kick.h5",
 )
 h = get_histogram_data(co_contact_file)
-plt.step(
-    chi1_bins[:-1], h, lw=2, where="post", label="Cons.-Normal kick", color=colours[5]
+plt.stairs(
+    h, chi1_bins, baseline=None, lw=2, label="Cons.-Normal kick", color=colours[5]
 )
 
 

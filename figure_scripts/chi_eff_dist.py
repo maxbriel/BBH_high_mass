@@ -107,48 +107,48 @@ for i, folder_type in enumerate(folder_types):
     elif folder_type == "GRMHD":
         label = "GRRMHD"
 
-    ax.step(
-        chieff_bins[:-1],
+    ax.stairs(
         h / np.sum(h * np.diff(chieff_bins)),
+        chieff_bins,
+        baseline=None,
         lw=2,
         label=label,
         color=colours[i],
-        where="post",
     )
 
 
 # low kicked populations
 co_contact_file = "../data/" + "kicks_Eddington-limited/low_kick.h5"
 h = get_histogram_data(co_contact_file)
-axes[1].step(
-    chieff_bins[:-1],
+axes[1].stairs(
     h / np.sum(h * np.diff(chieff_bins)),
+    chieff_bins,
+    baseline=None,
     lw=2,
     label="Eddington-limited",
     color=colours[0],
-    where="post",
 )
 
 co_contact_file = "../data/" + "kick_figure_GRMHD/low_kick.h5"
 h = get_histogram_data(co_contact_file)
-axes[1].step(
-    chieff_bins[:-1],
+axes[1].stairs(
     h / np.sum(h * np.diff(chieff_bins)),
+    chieff_bins,
+    baseline=None,
     lw=2,
     label="GRRMHD",
     color=colours[1],
-    where="post",
 )
 
 co_contact_file = "../data/" + "kicks_conservative/low_kick.h5"
 h = get_histogram_data(co_contact_file)
-axes[1].step(
-    chieff_bins[:-1],
+axes[1].stairs(
     h / np.sum(h * np.diff(chieff_bins)),
+    chieff_bins,
+    baseline=None,
     lw=2,
     label="Conservative",
     color=colours[2],
-    where="post",
 )
 axes[1].set_title("Low kick")
 
@@ -156,35 +156,35 @@ axes[1].set_title("Low kick")
 
 co_contact_file = "../data/" + "kicks_Eddington-limited/normal_kick.h5"
 h = get_histogram_data(co_contact_file)
-axes[2].step(
-    chieff_bins[:-1],
+axes[2].stairs(
     h / np.sum(h * np.diff(chieff_bins)),
+    chieff_bins,
+    baseline=None,
     lw=2,
     label="Eddington-limited",
     color=colours[0],
-    where="post",
 )
 
 co_contact_file = "../data/" + "kick_figure_GRMHD/normal_kick.h5"
 h = get_histogram_data(co_contact_file)
-axes[2].step(
-    chieff_bins[:-1],
+axes[2].stairs(
     h / np.sum(h * np.diff(chieff_bins)),
+    chieff_bins,
+    baseline=None,
     lw=2,
     label="GRRMHD",
     color=colours[1],
-    where="post",
 )
 
 co_contact_file = "../data/" + "kicks_conservative/normal_kick.h5"
 h = get_histogram_data(co_contact_file)
-axes[2].step(
-    chieff_bins[:-1],
+axes[2].stairs(
     h / np.sum(h * np.diff(chieff_bins)),
+    chieff_bins,
+    baseline=None,
     lw=2,
     label="Conservative",
     color=colours[2],
-    where="post",
 )
 
 axes[2].set_title("Normal kick")

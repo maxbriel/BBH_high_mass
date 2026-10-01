@@ -104,11 +104,11 @@ for i, folder_type in enumerate(folder_types):
     else:
         label = folder_type    
 
-    plt.step(
-        chi_p_bins[:-1],
+    plt.stairs(
         h,
+        chi_p_bins,
+        baseline=None,
         lw=2,
-        where="post",
         label="GRRMHD" + label,
         color=colours[i + 1],
     )
@@ -130,11 +130,11 @@ for i, folder_type in enumerate(folder_types):
     else:
         label = folder_type
 
-    plt.step(
-        chi_p_bins[:-1],
+    plt.stairs(
         h,
+        chi_p_bins,
+        baseline=None,
         lw=2,
-        where="post",
         label="Conservative" + label,
         color=colours[i + 4],
     )

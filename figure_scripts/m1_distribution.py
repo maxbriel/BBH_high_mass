@@ -47,7 +47,7 @@ cm = Colormap("tol:vibrant")
 colours = cm([0.1, 0.5, 0.8])
 
 # define bins
-mass_bins = np.logspace(np.log10(40), np.log10(210), 51)
+mass_bins = np.logspace(np.log10(MASS_CUTOFF), np.log10(210), 51)
 
 # setup figure
 fig, axes = plt.subplots(1, 3, figsize=(3.38 * 2, 2.535 * 0.7))
@@ -116,24 +116,24 @@ for i, folder_type in enumerate(folder_types):
     elif folder_type == "GRMHD":
         label = "GRRMHD"
 
-    ax.step(mass_bins[:-1], h, lw=2, label=label, color=colours[i], where="post")
+    ax.stairs(h, mass_bins, baseline=None, lw=2, label=label, color=colours[i])
 
 
 # low kicked populations
 co_contact_file = "../data/" + "kicks_Eddington-limited/low_kick.h5"
 h = get_histogram_data(co_contact_file)
-axes[1].step(
-    mass_bins[:-1], h, lw=2, label="Eddington-limited", color=colours[0], where="post"
+axes[1].stairs(
+    h, mass_bins, baseline=None, lw=2, label="Eddington-limited", color=colours[0]
 )
 
 co_contact_file = "../data/" + "kick_figure_GRMHD/low_kick.h5"
 h = get_histogram_data(co_contact_file)
-axes[1].step(mass_bins[:-1], h, lw=2, label="GRRMHD", color=colours[1], where="post")
+axes[1].stairs(h, mass_bins, baseline=None, lw=2, label="GRRMHD", color=colours[1])
 
 co_contact_file = "../data/" + "kicks_conservative/low_kick.h5"
 h = get_histogram_data(co_contact_file)
-axes[1].step(
-    mass_bins[:-1], h, lw=2, label="Conservative", color=colours[2], where="post"
+axes[1].stairs(
+    h, mass_bins, baseline=None, lw=2, label="Conservative", color=colours[2]
 )
 
 axes[1].set_title("Low kick")
@@ -142,18 +142,18 @@ axes[1].set_title("Low kick")
 
 co_contact_file = "../data/" + "kicks_Eddington-limited/normal_kick.h5"
 h = get_histogram_data(co_contact_file)
-axes[2].step(
-    mass_bins[:-1], h, lw=2, label="Eddington-limited", color=colours[0], where="post"
+axes[2].stairs(
+    h, mass_bins, baseline=None, lw=2, label="Eddington-limited", color=colours[0]
 )
 
 co_contact_file = "../data/" + "kick_figure_GRMHD/normal_kick.h5"
 h = get_histogram_data(co_contact_file)
-axes[2].step(mass_bins[:-1], h, lw=2, label="GRRMHD", color=colours[1], where="post")
+axes[2].stairs(h, mass_bins, baseline=None, lw=2, label="GRRMHD", color=colours[1])
 
 co_contact_file = "../data/" + "kicks_conservative/normal_kick.h5"
 h = get_histogram_data(co_contact_file)
-axes[2].step(
-    mass_bins[:-1], h, lw=2, label="Conservative", color=colours[2], where="post"
+axes[2].stairs(
+    h, mass_bins, baseline=None, lw=2, label="Conservative", color=colours[2]
 )
 
 axes[2].set_title("Normal kick")
