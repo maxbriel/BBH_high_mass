@@ -16,7 +16,7 @@ plt.style.use(
 
 
 # Define the data directory and folder types
-data_dir = "/home/users/b/briel/scratch/high_mass_physics/data/main_figure/"
+data_dir = "../../data/main_figure/"
 folder_types = ["Eddington-limited", "GRMHD", "conservative"]
 SFH_type = "IllustrisTNG"
 
@@ -71,20 +71,22 @@ for i, folder_type in enumerate(folder_types[:-2]):
     else:
         label = folder_type
 
-    plt.step(cos_theta_bins[:-1], h, lw=1, label="Eddington", color=colours[i])
+    plt.stairs(h, cos_theta_bins, baseline=None, lw=1, label="Eddington", color=colours[i])
 
 
-data_dir = "/home/users/b/briel/scratch/high_mass_physics/data/figure_2/"
+# figure_2: conservative accretion with kicks; the no-kick run is main_figure/conservative.h5
+figure_2_files = {
+    "no_kick": "../../data/main_figure/conservative.h5",
+    "low_kick": "../../data/kicks_conservative/low_kick.h5",
+    "normal_kick": "../../data/kicks_conservative/normal_kick.h5",
+}
 folder_types = ["no_kick", "low_kick", "normal_kick"]
 linestyles = ["solid", "dashed", "dotted"]
 
 SFH_type = "IllustrisTNG"
 for i, folder_type in enumerate(folder_types):
     print(f"Processing folder: {folder_type}")
-    co_contact_file = os.path.join(
-        data_dir,
-        folder_type + ".h5",
-    )
+    co_contact_file = figure_2_files[folder_type]
     # co_contact_file = os.path.join(folder_path, 'CO_contact.h5')
     data = Rates(co_contact_file, "BBH", SFH_type)
     print("Rates data loaded.")
@@ -118,16 +120,17 @@ for i, folder_type in enumerate(folder_types):
     else:
         label = folder_type
 
-    plt.step(
-        cos_theta_bins[:-1],
+    plt.stairs(
         h,
+        cos_theta_bins,
+        baseline=None,
         lw=1,
         label="Cons." + label,
         color=colours[5],
         ls=linestyles[i],
     )
 
-data_dir = "/home/users/b/briel/scratch/high_mass_physics/data/kick_figure_GRMHD/"
+data_dir = "../../data/kick_figure_GRMHD/"
 folder_types = ["no_kick", "low_kick", "normal_kick"]
 SFH_type = "IllustrisTNG"
 for i, folder_type in enumerate(folder_types):
@@ -169,9 +172,10 @@ for i, folder_type in enumerate(folder_types):
     else:
         label = folder_type
 
-    plt.step(
-        cos_theta_bins[:-1],
+    plt.stairs(
         h,
+        cos_theta_bins,
+        baseline=None,
         lw=1,
         label="GRMHD" + label,
         color=colours[3],
@@ -185,6 +189,6 @@ plt.xlabel(r"$\cos(\theta_1)$")
 plt.ylabel("PDF")
 plt.legend(ncol=2)
 
-output_dir = "/home/users/b/briel/scratch/high_mass_physics/figures"
-plt.savefig(f"{output_dir}/intrinsic_cos_theta_1.png", dpi=300, bbox_inches="tight")
-plt.savefig(f"{output_dir}/intrinsic_cos_theta_1.pdf", bbox_inches="tight")
+output_dir = "../../figures"
+plt.savefig(f"{output_dir}/png/intrinsic_cos_theta_1.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"{output_dir}/pdf/intrinsic_cos_theta_1.pdf", bbox_inches="tight")

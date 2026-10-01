@@ -8,69 +8,55 @@ from cmap import Colormap
 from posydon.config import PATH_TO_POSYDON
 from posydon.popsyn.rate_calculation import get_shell_comoving_volume
 from posydon.popsyn.synthetic_population import Rates
-from scipy.interpolate import interp1d
 from scipy.stats import gaussian_kde
 
 plt.style.use(
     str(Path(PATH_TO_POSYDON) / "posydon" / "visualization" / "posydon.mplstyle")
 )
 
-# load spline
-spline_file = "/home/users/b/briel/scratch/high_mass_physics/data/spline_data/ppd_pdfs_mean_m1qzchieff_mmin40_collector_only_10000w_10000s_rng129_zspline.h5"
+MASS_CUTOFF = 39.76734837
+Z_MIN = 0.15
+Z_MAX = 0.25
+Z_EVAL = 0.2
 
-file = h5py.File(spline_file, "r")
+# LVK GWTC-5.0 BGP data at z = 0: the 1D dR/dm1 sets the rate and the 2D map,
+# a pdf in (ln m1, q) bins, sets the shape in (m1, q)
+data_file = "../../data/hm_dists_m1rates_gwtc5_39.h5"
+with h5py.File(data_file, "r") as hf:
+    m1_grid = hf["1D"]["mass1"][()]
+    rate_m1 = np.median(hf["1D"]["p_mass1"][()], axis=0)
+    m1_edges = hf["2D"]["mass1"][()]
+    q_edges = hf["2D"]["mass_ratio"][()]
+    p_lnm1_q = hf["2D"]["p_m1q"][()]
 
-mass_pdf = file["mass_pdf"][:].T
-mass_grid_pdf = file["mgrid"][:]
-q_bins_pdf = file["qgrid"][:]
+# scale to z = 0.2, as for the main figures
+lvk_rate = np.trapz(rate_m1, m1_grid) * (1 + Z_EVAL) ** 2.7
 
-# Transform 2D PDF P(m1, q) to 1D histogram of M_total
-# Simple approach: bin each (m1, q) point by its M_total = m1(1 + q)
-total_mass_grid = np.linspace(40, 300, 500)
-mass_pdf_total = np.zeros_like(total_mass_grid)
+# spread each (ln m1, q) bin uniformly over sub-points and bin in M_total = m1 (1 + q)
+n_sub = 50
+f_sub = (np.arange(n_sub) + 0.5) / n_sub
+lnm1 = np.log(m1_edges[:-1])[:, None] + np.diff(np.log(m1_edges))[:, None] * f_sub
+q = q_edges[:-1][:, None] + np.diff(q_edges)[:, None] * f_sub
+bin_prob = p_lnm1_q * np.diff(np.log(m1_edges))[:, None] * np.diff(q_edges)[None, :]
+M_total = np.exp(lnm1)[:, None, :, None] * (1 + q[None, :, None, :])
+M_weights = np.broadcast_to((bin_prob / n_sub**2)[:, :, None, None], M_total.shape)
 
-# Accumulate PDF values into M_total bins
-for i in range(len(mass_grid_pdf)):
-    for j in range(len(q_bins_pdf)):
-        m1 = mass_grid_pdf[i]
-        q = q_bins_pdf[j]
-        M_total = m1 * (1 + q)
+total_mass_bins = np.linspace(40, 300, 131)
+h_lvk, _ = np.histogram(M_total.ravel(), bins=total_mass_bins, weights=M_weights.ravel())
 
-        # Find the bin for this M_total
-        idx = np.searchsorted(total_mass_grid, M_total)
-        if 0 < idx < len(total_mass_grid):
-            # Add the PDF value (not weighted by grid spacing)
-            mass_pdf_total[idx] += mass_pdf[i, j]
-
-# Normalize to make it a proper PDF
-dM_total = np.diff(total_mass_grid)
-dM_total = np.append(dM_total, dM_total[-1])
-norm = np.sum(mass_pdf_total * dM_total)
-if norm > 0:
-    mass_pdf_total /= norm
-
-# Create interpolator object
-pdf_interpolator = interp1d(
-    total_mass_grid, mass_pdf_total, kind="cubic", bounds_error=False, fill_value=0.0
-)
-
-##mean_pdf = np.mean(mass_pdf_total, axis=0)
-# std_pdf = np.std(mass_pdf_total, axis=0)
-# Use 95% confidence interval (2.5th to 97.5th percentile)
-# percentile_2_5 = np.percentile(mass_pdf_total, 2.5, axis=0)
-# percentile_97_5 = np.percentile(mass_pdf_total, 97.5, axis=0)
-
-# Plot mean with filled uncertainty region
 fig, ax = plt.subplots(1, 1, figsize=(3.38, 2.535))
 
-plt.plot(total_mass_grid, mass_pdf_total, color="black", linewidth=2, label="Spline")
-# plt.fill_between(total_mass_grid, percentile_2_5, percentile_97_5,
-#                 color='black',
-#                 alpha=0.2,
-#                 edgecolor='none')
+plt.stairs(
+    lvk_rate * h_lvk / np.diff(total_mass_bins),
+    total_mass_bins,
+    baseline=None,
+    color="black",
+    linewidth=2,
+    label=r"LVK $\texttt{GWTC-5.0}$",
+)
 
 # Define the data directory and folder types
-data_dir = "/home/users/b/briel/scratch/high_mass_physics/data/main_figure/"
+data_dir = "../../data/main_figure/"
 folder_types = ["Eddington-limited", "GRMHD", "conservative"]
 SFH_type = "IllustrisTNG"
 
@@ -99,10 +85,9 @@ for i, folder_type in enumerate(folder_types[:-2]):
     max_mass = np.maximum(
         data.population["S1_mass"].values, data.population["S2_mass"].values
     )
-    mask = max_mass > 40
-    z_max = 2
-    z_event_mask = data.z_events <= z_max
-    volume = get_shell_comoving_volume(0, z_max)
+    mask = max_mass >= MASS_CUTOFF
+    z_event_mask = (data.z_events >= Z_MIN) & (data.z_events <= Z_MAX)
+    volume = get_shell_comoving_volume(Z_MIN, Z_MAX)
     weights = data.weights[z_event_mask][mask]
     filtered_population = data.population[mask]
     total_mass = (
@@ -129,26 +114,27 @@ for i, folder_type in enumerate(folder_types[:-2]):
     )
 
 
-data_dir = "/home/users/b/briel/scratch/high_mass_physics/data/figure_2/"
+# figure_2: conservative accretion with kicks; the no-kick run is main_figure/conservative.h5
+figure_2_files = {
+    "no_kick": "../../data/main_figure/conservative.h5",
+    "low_kick": "../../data/kicks_conservative/low_kick.h5",
+    "normal_kick": "../../data/kicks_conservative/normal_kick.h5",
+}
 folder_types = ["no_kick", "low_kick", "normal_kick"]
 linestyles = ["solid", "dashed", "dotted"]
 
 SFH_type = "IllustrisTNG"
 for i, folder_type in enumerate(folder_types):
     print(f"Processing folder: {folder_type}")
-    co_contact_file = os.path.join(
-        data_dir,
-        folder_type + ".h5",
-    )
+    co_contact_file = figure_2_files[folder_type]
     data = Rates(co_contact_file, "BBH", SFH_type)
     print("Rates data loaded.")
     max_mass = np.maximum(
         data.population["S1_mass"].values, data.population["S2_mass"].values
     )
-    mask = max_mass > 40
-    z_max = 2
-    z_event_mask = data.z_events <= z_max
-    volume = get_shell_comoving_volume(0, z_max)
+    mask = max_mass >= MASS_CUTOFF
+    z_event_mask = (data.z_events >= Z_MIN) & (data.z_events <= Z_MAX)
+    volume = get_shell_comoving_volume(Z_MIN, Z_MAX)
     weights = data.weights[z_event_mask][mask]
     filtered_population = data.population[mask]
 
@@ -156,7 +142,6 @@ for i, folder_type in enumerate(folder_types):
         filtered_population["S1_mass"].to_numpy()
         + filtered_population["S2_mass"].to_numpy()
     )
-    print(total_mass)
     print(filtered_population["metallicity"].value_counts())
     # plot KDE
     # h, _ = np.histogram(S1_mass,
@@ -185,7 +170,7 @@ for i, folder_type in enumerate(folder_types):
         ls=linestyles[i],
     )
 
-data_dir = "/home/users/b/briel/scratch/high_mass_physics/data/kick_figure_GRMHD/"
+data_dir = "../../data/kick_figure_GRMHD/"
 folder_types = ["no_kick", "low_kick", "normal_kick"]
 SFH_type = "IllustrisTNG"
 for i, folder_type in enumerate(folder_types):
@@ -200,10 +185,9 @@ for i, folder_type in enumerate(folder_types):
     max_mass = np.maximum(
         data.population["S1_mass"].values, data.population["S2_mass"].values
     )
-    mask = max_mass > 40
-    z_max = 2
-    z_event_mask = data.z_events <= z_max
-    volume = get_shell_comoving_volume(0, z_max)
+    mask = max_mass >= MASS_CUTOFF
+    z_event_mask = (data.z_events >= Z_MIN) & (data.z_events <= Z_MAX)
+    volume = get_shell_comoving_volume(Z_MIN, Z_MAX)
     weights = data.weights[z_event_mask][mask]
     filtered_population = data.population[mask]
     total_mass = (
@@ -236,8 +220,8 @@ plt.xlim(40, 300)
 plt.xlabel(r"$M_\mathrm{total} \, (M_{\odot})$")
 plt.ylabel("Rate density $(\mathrm{Gpc}^{-3}\,\mathrm{yr}^{-1}\,M_{\odot}^{-1})$")
 plt.legend(bbox_to_anchor=(0, -0.2), loc="upper left", ncol=2)
-output_dir = "/home/users/b/briel/scratch/high_mass_physics/figures"
+output_dir = "../../figures"
 plt.savefig(
-    f"{output_dir}/intrinsic_Mtotal_distribution.png", dpi=300, bbox_inches="tight"
+    f"{output_dir}/png/intrinsic_Mtotal_distribution.png", dpi=300, bbox_inches="tight"
 )
-plt.savefig(f"{output_dir}/intrinsic_Mtotal_distribution.pdf", bbox_inches="tight")
+plt.savefig(f"{output_dir}/pdf/intrinsic_Mtotal_distribution.pdf", bbox_inches="tight")

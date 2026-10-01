@@ -8,35 +8,39 @@ from cmap import Colormap
 from posydon.config import PATH_TO_POSYDON
 from posydon.popsyn.rate_calculation import get_shell_comoving_volume
 from posydon.popsyn.synthetic_population import Rates
-from scipy.interpolate import RegularGridInterpolator
 
 plt.style.use(
     str(Path(PATH_TO_POSYDON) / "posydon" / "visualization" / "posydon.mplstyle")
 )
 
-# load the spline data
-spline_file = "/home/users/b/briel/scratch/high_mass_physics/data/spline_data/ppd_pdfs_mean_m1qzchieff_mmin40_collector_only_10000w_10000s_rng129_zspline.h5"
-file = h5py.File(spline_file, "r")
+# load the LVK GWTC-5.0 BGP data; the 2D map is a pdf in (ln m1, q) bins
+data_file = "../../data/hm_dists_m1rates_gwtc5_39.h5"
+with h5py.File(data_file, "r") as hf:
+    m1_edges = hf["2D"]["mass1"][()]
+    q_edges = hf["2D"]["mass_ratio"][()]
+    p_lnm1_q = hf["2D"]["p_m1q"][()]
 
-m1_bins_pdf = file["mgrid"][:]
-q_bins_pdf = file["qgrid"][:]
-pdf_spline = file["mass_pdf"][:]
+# pdf per unit m1 and q
+m1_centres = np.sqrt(m1_edges[1:] * m1_edges[:-1])
+pdf_m1q = p_lnm1_q / m1_centres[:, None]
 
-spline_interpolator = RegularGridInterpolator(
-    (m1_bins_pdf, q_bins_pdf),
-    pdf_spline.T,
-    method="linear",
-    bounds_error=False,
-    fill_value=0,
-)
+
+def lvk_pdf(m1, q):
+    """Binned BGP pdf p(m1, q), zero outside the BGP bins."""
+    i = np.searchsorted(m1_edges, m1) - 1
+    j = np.searchsorted(q_edges, q) - 1
+    inside = (i >= 0) & (i < len(m1_edges) - 1) & (j >= 0) & (j < len(q_edges) - 1)
+    pdf = np.zeros(np.shape(m1))
+    pdf[inside] = pdf_m1q[i[inside], j[inside]]
+    return pdf
 
 
 high_res_mchirp_bins = np.linspace(1, 200, 2000)
 high_res_q_bins = np.linspace(0.0001, 1, 2000)
 X, Y = np.meshgrid(high_res_mchirp_bins, high_res_q_bins, indexing="ij")
 high_res_m1_values = Y ** (-3 / 5) * (1 + Y) ** (1 / 5) * X
-points = np.array([high_res_m1_values.ravel(), Y.ravel()]).T
-Z = spline_interpolator(points).reshape(X.shape) * Y ** (-3 / 5) * (1 + Y) ** (1 / 5)
+# p(Mchirp, q) = p(m1, q) dm1/dMchirp
+Z = lvk_pdf(high_res_m1_values, Y) * Y ** (-3 / 5) * (1 + Y) ** (1 / 5)
 # make into a density
 Z = Z / np.sum(Z)
 pdf_levels = [
@@ -50,7 +54,12 @@ pdf_colours = cm_blues([0.2, 0.6, 1.0])
 cm_grays = Colormap("colorbrewer:Greys")
 
 
-data_dir = "/home/users/b/briel/scratch/high_mass_physics/data/figure_2/"
+# figure_2: conservative accretion with kicks; the no-kick run is main_figure/conservative.h5
+figure_2_files = {
+    "no_kick": "../../data/main_figure/conservative.h5",
+    "low_kick": "../../data/kicks_conservative/low_kick.h5",
+    "normal_kick": "../../data/kicks_conservative/normal_kick.h5",
+}
 folder_types = ["no_kick", "low_kick", "normal_kick"]
 SFH_type = "IllustrisTNG"
 
@@ -63,7 +72,7 @@ plt.subplots_adjust(wspace=0.05, hspace=0.05)
 
 for i, folder_type in enumerate(folder_types):
     print(f"Processing folder: {folder_type}")
-    co_contact_file = os.path.join(data_dir, folder_type + ".h5")
+    co_contact_file = figure_2_files[folder_type]
     data = Rates(co_contact_file, "BBH", SFH_type)
     print("Rates data loaded.")
     max_mass = np.maximum(
@@ -198,5 +207,6 @@ for ax in axes[:, 1:].flatten():
 for ax in axes.flatten():
     ax.grid(ls="--", alpha=0.5)
 
-output_dir = "/home/users/b/briel/scratch/high_mass_physics/figures"
-plt.savefig(f"{output_dir}/intrinsic_figure_2_kicks.png", bbox_inches="tight")
+output_dir = "../../figures"
+plt.savefig(f"{output_dir}/png/intrinsic_figure_2_kicks.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"{output_dir}/pdf/intrinsic_figure_2_kicks.pdf", bbox_inches="tight")
