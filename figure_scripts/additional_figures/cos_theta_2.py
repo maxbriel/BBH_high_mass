@@ -30,7 +30,7 @@ cm = Colormap("tol:vibrant")
 
 colours = cm([0.1, 0.2, 0.3, 0.5, 0.6, 0.8])
 
-chi_eff_bins = np.linspace(0, 1, 51)
+cos_theta_bins = np.linspace(-1, 1, 51)
 
 for i, folder_type in enumerate(folder_types[:-2]):
     print(f"Processing folder: {folder_type}")
@@ -59,15 +59,19 @@ for i, folder_type in enumerate(folder_types[:-2]):
     )
     print(filtered_population["metallicity"].value_counts())
     # plot KDE
-    kde = gaussian_kde(np.cos(S2_tilt), weights=np.nansum(weights, axis=1) / volume)
-    x_eval = np.linspace(-1.0, 1.0, 500)
-    kde_values = kde(x_eval)
+    h, _ = np.histogram(
+        np.cos(S2_tilt),
+        bins=cos_theta_bins,
+        weights=np.nansum(weights, axis=1) / volume,
+        density=True,
+    )
+
     if folder_type in tuple(title_mapping.keys()):
         label = title_mapping[folder_type]
     else:
         label = folder_type
 
-    plt.plot(x_eval, kde_values, lw=1, label="Eddington", color=colours[i])
+    plt.stairs(h, cos_theta_bins, baseline=None, lw=1, label="Eddington", color=colours[i])
 
 
 # figure_2: conservative accretion with kicks; the no-kick run is main_figure/conservative.h5
@@ -104,17 +108,22 @@ for i, folder_type in enumerate(folder_types):
     )
     print(filtered_population["metallicity"].value_counts())
     # plot KDE
-    kde = gaussian_kde(np.cos(S2_tilt), weights=np.nansum(weights, axis=1) / volume)
-    x_eval = np.linspace(-1.0, 1.0, 500)
-    kde_values = kde(x_eval)
+    h, _ = np.histogram(
+        np.cos(S2_tilt),
+        bins=cos_theta_bins,
+        weights=np.nansum(weights, axis=1) / volume,
+        density=True,
+    )
+
     if folder_type in tuple(title_mapping.keys()):
         label = title_mapping[folder_type]
     else:
         label = folder_type
 
-    plt.plot(
-        x_eval,
-        kde_values,
+    plt.stairs(
+        h,
+        cos_theta_bins,
+        baseline=None,
         lw=1,
         label="Cons." + label,
         color=colours[5],
@@ -151,17 +160,22 @@ for i, folder_type in enumerate(folder_types):
     )
     print(filtered_population["metallicity"].value_counts())
     # plot KDE
-    kde = gaussian_kde(np.cos(S2_tilt), weights=np.nansum(weights, axis=1) / volume)
-    x_eval = np.linspace(-1.0, 1.0, 500)
-    kde_values = kde(x_eval)
+    h, _ = np.histogram(
+        np.cos(S2_tilt),
+        bins=cos_theta_bins,
+        weights=np.nansum(weights, axis=1) / volume,
+        density=True,
+    )
+
     if folder_type in tuple(title_mapping.keys()):
         label = title_mapping[folder_type]
     else:
         label = folder_type
 
-    plt.plot(
-        x_eval,
-        kde_values,
+    plt.stairs(
+        h,
+        cos_theta_bins,
+        baseline=None,
         lw=1,
         label="GRMHD" + label,
         color=colours[3],
