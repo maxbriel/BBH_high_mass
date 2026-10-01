@@ -10,34 +10,16 @@ from posydon.popsyn.rate_calculation import get_shell_comoving_volume
 from posydon.popsyn.synthetic_population import Rates
 from scipy.stats import gaussian_kde
 
-
 def precession(theta_1, theta_2, a1, a2, m1, m2):
-    """Calculate the effective spin precession.
-
-    Following the formulation in Gerosa+2021, which
-    is used in LIGO/Virgo analyses.
-
-    Parameters
-    ----------
-    theta_1 : float or np.ndarray
-        Tilt angle of the primary spin (in radians).
-    theta_2 : float or np.ndarray
-        Tilt angle of the secondary spin (in radians).
-    a1 : float or np.ndarray
-        Dimensionless spin magnitude of the primary.
-    a2 : float or np.ndarray
-        Dimensionless spin magnitude of the secondary.
-    m1 : float or np.ndarray
-        Mass of the primary.
-    m2 : float or np.ndarray
-        Mass of the secondary.
-    """
-    q = m2 / m1
-    a_1_perp = np.abs(a1 * np.sin(theta_1))
-    a_2_perp = q * ((4 * q + 3) / (4 + 3 * q)) * a2 * np.sin(theta_2)
-    chi_p = np.maximum(a_1_perp, a_2_perp)
+    """Effective precession spin (Gerosa+2021, Eq. 14), ordered by mass."""
+    swap = m2 > m1
+    m_hi, m_lo = np.where(swap, m2, m1), np.where(swap, m1, m2)
+    a_hi, a_lo = np.where(swap, a2, a1), np.where(swap, a1, a2)
+    t_hi, t_lo = np.where(swap, theta_2, theta_1), np.where(swap, theta_1, theta_2)
+    q = m_lo / m_hi
+    chi_p = np.maximum(a_hi * np.abs(np.sin(t_hi)),
+                       q * (4*q + 3) / (4 + 3*q) * a_lo * np.abs(np.sin(t_lo)))
     return chi_p
-
 
 plt.style.use(
     str(Path(PATH_TO_POSYDON) / "posydon" / "visualization" / "posydon.mplstyle")
