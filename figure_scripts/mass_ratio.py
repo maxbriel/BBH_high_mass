@@ -132,7 +132,7 @@ axes[1].stairs(
     mass_ratio_bins,
     baseline=None,
     lw=2,
-    label="GRMHD",
+    label="GRRMHD",
     color=colours[1],
 )
 
@@ -168,7 +168,7 @@ axes[2].stairs(
     mass_ratio_bins,
     baseline=None,
     lw=2,
-    label="GRMHD",
+    label="GRRMHD",
     color=colours[1],
 )
 

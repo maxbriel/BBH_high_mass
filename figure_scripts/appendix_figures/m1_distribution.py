@@ -103,6 +103,8 @@ for i, folder_type in enumerate(folder_types):
     label = folder_type
     if folder_type == "conservative":
         label = "Conservative"
+    elif folder_type == "GRMHD":
+        label = "GRRMHD"
 
     ax.stairs(h, mass_bins, baseline=None, lw=2, label=label, color=colours[i])
 
@@ -116,7 +118,7 @@ axes[1].stairs(
 
 co_contact_file = "../../data/no_H_conserved/" + "GRMHD/low_kick.h5"
 h = get_histogram_data(co_contact_file)
-axes[1].stairs(h, mass_bins, baseline=None, lw=2, label="GRMHD", color=colours[1])
+axes[1].stairs(h, mass_bins, baseline=None, lw=2, label="GRRMHD", color=colours[1])
 
 co_contact_file = "../../data/no_H_conserved/" + "conservative/low_kick.h5"
 h = get_histogram_data(co_contact_file)
@@ -136,7 +138,7 @@ axes[2].stairs(
 
 co_contact_file = "../../data/no_H_conserved/" + "GRMHD/normal_kick.h5"
 h = get_histogram_data(co_contact_file)
-axes[2].stairs(h, mass_bins, baseline=None, lw=2, label="GRMHD", color=colours[1])
+axes[2].stairs(h, mass_bins, baseline=None, lw=2, label="GRRMHD", color=colours[1])
 
 co_contact_file = "../../data/no_H_conserved/" + "conservative/normal_kick.h5"
 h = get_histogram_data(co_contact_file)

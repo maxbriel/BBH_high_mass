@@ -104,6 +104,8 @@ for i, folder_type in enumerate(folder_types):
     label = folder_type
     if folder_type == "conservative":
         label = "Conservative"
+    elif folder_type == "GRMHD":
+        label = "GRRMHD"
 
     ax.stairs(
         h / np.sum(h * np.diff(chieff_bins)),
@@ -134,7 +136,7 @@ axes[1].stairs(
     chieff_bins,
     baseline=None,
     lw=2,
-    label="GRMHD",
+    label="GRRMHD",
     color=colours[1],
 )
 
@@ -170,7 +172,7 @@ axes[2].stairs(
     chieff_bins,
     baseline=None,
     lw=2,
-    label="GRMHD",
+    label="GRRMHD",
     color=colours[1],
 )
 

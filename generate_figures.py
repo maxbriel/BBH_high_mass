@@ -20,7 +20,6 @@ import logging
 
 # scripts that cannot run from the data in data/
 EXCLUDE = {
-    "grid_slices.py": "needs the MESA grids",
     "detectable_main_figure.py": "needs observable populations",
     "detectable_kick_figure.py": "needs observable populations",
 }

@@ -76,7 +76,7 @@ plt.stairs(
 )
 
 data_dir = "../data/kick_figure_GRMHD/"
-# GRMHD no kick
+# GRRMHD no kick
 co_contact_file = os.path.join(
     data_dir,
     "no_kick.h5",
@@ -154,7 +154,7 @@ plt.stairs(
 #              h,
 #              lw=2,
 #              where='post',
-#              label="GRMHD"+label,
+#              label="GRRMHD"+label,
 #              color=colours[i+1])
 
 

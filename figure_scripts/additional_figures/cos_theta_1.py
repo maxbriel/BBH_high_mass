@@ -177,7 +177,7 @@ for i, folder_type in enumerate(folder_types):
         cos_theta_bins,
         baseline=None,
         lw=1,
-        label="GRMHD" + label,
+        label="GRRMHD" + label,
         color=colours[3],
         ls=linestyles[i],
     )

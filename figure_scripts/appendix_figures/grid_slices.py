@@ -1,11 +1,8 @@
-# Load the three different grids for different accretion efficiencies
+# Load the three different grids for different accretion efficiencies:
+# Eddington-limited is the standard POSYDON grid in PATH_TO_POSYDON_DATA,
+# GRRMHD ('moderate') and conservative are in data/other_grids.
 
-# grid locations
-grids_path = (
-    "/srv/astro/projects/posydon/max/population_synthesis/250825_high_mass/grid_links"
-)
-
-grid_types = ["eddington_limited", "GRMHD", "conservative"]
+grid_types = ["Eddington-limited", "GRRMHD", "conservative"]
 
 
 import warnings
@@ -20,6 +17,7 @@ from posydon.grids.psygrid import PSyGrid
 from posydon.popsyn.synthetic_population import Population, Rates
 from posydon.utils.common_functions import (convert_metallicity_to_string,
                                             inspiral_timescale_from_separation)
+from posydon.utils.constants import Zsun
 
 # Suppress warnings about missing ini parameters
 warnings.filterwarnings("ignore", message="Missing ini parameter:.*")
@@ -31,6 +29,9 @@ DONOR_MASS = 33.8767  # 59.4328  # Fixed donor mass in solar masses
 HUBBLE_TIME = 13.8e9  # years
 MARKER_SIZE = 9
 MASS_TOLERANCE = 2.0  # solar masses
+# grid points (BH mass [Msun], initial period [days]) shown in grid_model_evolution.py
+# and grid_model_evolution_short_period.py, outlined in red
+HIGHLIGHTED_MODELS = [(10.2485, 14.874), (30.0, 1.7433)]
 CO_TYPE = "BBH"
 SFH_IDENTIFIER = "IllustrisTNG"
 
@@ -70,7 +71,10 @@ def plot_donor_mass_analysis(
     # Find the closest donor mass in the grid
     unique_masses = np.unique(m1_initial)
     closest_mass = unique_masses[np.argmin(np.abs(unique_masses - M_donor))]
-    donor_mass_mask = m1_initial == closest_mass
+    # the conservative grid also contains some models at another metallicity
+    donor_mass_mask = (m1_initial == closest_mass) & np.isclose(
+        grid.initial_values["Z"], metallicity * Zsun
+    )
 
     print(f"    Using donor mass: {closest_mass:.4f} M☉ (requested: {M_donor:.1f} M☉)")
 
@@ -189,16 +193,40 @@ def plot_donor_mass_analysis(
     return ax
 
 
-def load_grid_data(path, metallicity):
+def highlight_models(ax, grid, m1_initial, m2_initial, p_initial, M_donor, metallicity):
+    """Outline the HIGHLIGHTED_MODELS grid points of the donor mass in red."""
+    unique_masses = np.unique(m1_initial)
+    closest_mass = unique_masses[np.argmin(np.abs(unique_masses - M_donor))]
+    x_axis = grid.initial_values["star_2_mass"] / grid.initial_values["star_1_mass"]
+    y_axis = np.log10(grid.initial_values["period_days"])
+    for i, (bh_mass, period) in enumerate(HIGHLIGHTED_MODELS):
+        mask = (
+            (m1_initial == closest_mass)
+            & np.isclose(m2_initial, bh_mass)
+            & np.isclose(p_initial, period)
+            & np.isclose(grid.initial_values["Z"], metallicity * Zsun)
+        )
+        ax.scatter(
+            x_axis[mask],
+            y_axis[mask],
+            s=MARKER_SIZE * 4,
+            marker="s",
+            color="none",
+            edgecolor="red",
+            lw=1,
+            zorder=11,
+            label="Evolution models" if i == 0 else None,
+        )
+
+
+def load_grid_data(CO_HMS_RLO_file):
     """
     Load the CO-HMS RLO grid data.
 
     Parameters
     ----------
-    path : str or Path
-        Path to the grid directory.
-    metallicity : float
-        Metallicity value.
+    CO_HMS_RLO_file : str or Path
+        Path to the CO-HMS RLO grid file.
 
     Returns
     -------
@@ -206,10 +234,8 @@ def load_grid_data(path, metallicity):
         grid, m1_initial, m2_initial, p_initial
     """
     print("  Loading CO-HMS RLO grid...")
-    str_met = convert_metallicity_to_string(metallicity)
-    CO_HMS_RLO_file = Path(path) / "CO-HMS_RLO" / f"{str_met}_Zsun.h5"
     grid = PSyGrid(str(CO_HMS_RLO_file))
-    print(f"    ✓ Loaded grid from {Path(path).name}")
+    print(f"    ✓ Loaded grid from {CO_HMS_RLO_file}")
 
     print("  Parsing initial conditions from grid...")
     m1_initial = np.zeros(len(grid.MESA_dirs))
@@ -233,8 +259,8 @@ def create_figure(donor_mass, grid_paths, grid_labels, metallicity, output_folde
     ----------
     donor_mass : float
         Donor mass to analyze.
-    grid_paths : list of str
-        List of paths to the grid directories.
+    grid_paths : list of Path
+        List of paths to the CO-HMS RLO grid files.
     grid_labels : list of str
         Labels for each grid.
     metallicity : float
@@ -260,10 +286,11 @@ def create_figure(donor_mass, grid_paths, grid_labels, metallicity, output_folde
     print("  Plotting grid analysis...")
     for grid_path, grid_label, ax in zip(grid_paths, grid_labels, axes):
         print(f"\n  Processing grid: {grid_label}")
-        grid, m1_initial, m2_initial, p_initial = load_grid_data(grid_path, metallicity)
+        grid, m1_initial, m2_initial, p_initial = load_grid_data(grid_path)
         ax = plot_donor_mass_analysis(
             donor_mass, ax, grid, m1_initial, metallicity, hist2d_colour, marker_colours
         )
+        highlight_models(ax, grid, m1_initial, m2_initial, p_initial, donor_mass, metallicity)
         ax.set_title(grid_label)
         ax.set_xlabel("$M_\mathrm{acc}/M_\mathrm{donor}$")
 
@@ -285,10 +312,10 @@ def create_figure(donor_mass, grid_paths, grid_labels, metallicity, output_folde
     pdf_folder.mkdir(parents=True, exist_ok=True)
 
     output_file_png = (
-        png_folder / f"1e-2Zun_COHMS_RLO_accretion_comparison_M{int(donor_mass)}.png"
+        png_folder / f"{str_met}_Zsun_COHMS_RLO_accretion_comparison_M{int(donor_mass)}.png"
     )
     output_file_pdf = (
-        pdf_folder / f"1e-2Zun_COHMS_RLO_accretion_comparison_M{int(donor_mass)}.pdf"
+        pdf_folder / f"{str_met}_Zsun_COHMS_RLO_accretion_comparison_M{int(donor_mass)}.pdf"
     )
 
     # Get handles and labels from the first plot
@@ -316,10 +343,15 @@ print("CO-HMS Grid Slice Analysis - Accretion Efficiency Comparison")
 print("=" * 70)
 
 # Set up grid paths for different accretion efficiencies
-grid_paths = [Path(grids_path) / grid_type / "POSYDON_data" for grid_type in grid_types]
-grid_labels = ["Eddington-limited", "GRMHD", "Conservative"]
+str_met = convert_metallicity_to_string(METALLICITY)
+grid_paths = [
+    Path(PATH_TO_POSYDON_DATA) / "CO-HMS_RLO" / f"{str_met}_Zsun.h5",
+    Path("../../data/other_grids") / f"{str_met}_Zsun_moderate.h5",
+    Path("../../data/other_grids") / f"{str_met}_Zsun_conservative.h5",
+]
+grid_labels = ["Eddington-limited", "GRRMHD", "Conservative"]
 
-output_folder = Path("/home/users/b/briel/scratch/high_mass_physics/figures/")
+output_folder = Path("../../figures")
 
 print(f"\nMetallicity: {METALLICITY}")
 print(f"Donor mass: {DONOR_MASS} M☉")
